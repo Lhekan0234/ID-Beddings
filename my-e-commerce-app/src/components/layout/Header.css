@@ -42,6 +42,27 @@
   border-bottom-color: var(--color-accent);
 }
 
+/* Cart link with item count */
+.site-header__cart {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.site-header__cart-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5rem;
+  height: 1.5rem;
+  padding-inline: var(--space-1);
+  border-radius: 999px;
+  background: var(--color-accent);
+  color: #fff;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+}
+
 /* Mobile toggle (hidden on desktop) */
 .site-header__toggle {
   display: none;

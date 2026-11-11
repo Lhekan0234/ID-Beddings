@@ -19,6 +19,9 @@ export default function Home() {
             Browse our mattress collections and find the right fit for every room and budget.
           </p>
           <div className="hero__actions">
+            <Button to="/find-your-mattress" variant="accent" size="lg">
+              Which mattress is right for me?
+            </Button>
             <Button to="/collections" variant="primary" size="lg">Shop collections</Button>
             <Button href={site.whatsapp.specialist} variant="secondary" size="lg">
               Chat with a specialist

@@ -16,6 +16,11 @@
 //   - images            -> []    (empty -> local placeholder graphic, no hotlink)
 //   - stock levels      -> 'TBD' (unknown, not a fabricated count)
 //   - product claims    -> none  (no "best seller"/medical/quality claims)
+//   - audiences         -> []    (who the mattress suits; drives the
+//                                 recommendation form in prd/agent.md section 7)
+//
+// Real products should include an `audiences` array using the values
+// 'adult', 'child', 'couple' and/or 'guest-room'.
 //
 // TODO(owner): Replace this file's contents with the real catalogue (the seven
 // collections and their products, prices, sizes, firmness, specs and images).
@@ -51,6 +56,7 @@ export const products = [
     images: [],
     sizes: [],
     firmness: [],
+    audiences: [],
     stockStatus: 'TBD',
     specs: {},
     isPlaceholder: true,
@@ -67,6 +73,7 @@ export const products = [
     images: [],
     sizes: [],
     firmness: [],
+    audiences: [],
     stockStatus: 'TBD',
     specs: {},
     isPlaceholder: true,
@@ -83,6 +90,7 @@ export const products = [
     images: [],
     sizes: [],
     firmness: [],
+    audiences: [],
     stockStatus: 'TBD',
     specs: {},
     isPlaceholder: true,
@@ -99,6 +107,7 @@ export const products = [
     images: [],
     sizes: [],
     firmness: [],
+    audiences: [],
     stockStatus: 'TBD',
     specs: {},
     isPlaceholder: true,
@@ -115,6 +124,7 @@ export const products = [
     images: [],
     sizes: [],
     firmness: [],
+    audiences: [],
     stockStatus: 'TBD',
     specs: {},
     isPlaceholder: true,
@@ -131,6 +141,7 @@ export const products = [
     images: [],
     sizes: [],
     firmness: [],
+    audiences: [],
     stockStatus: 'TBD',
     specs: {},
     isPlaceholder: true,
@@ -147,6 +158,7 @@ export const products = [
     images: [],
     sizes: [],
     firmness: [],
+    audiences: [],
     stockStatus: 'TBD',
     specs: {},
     isPlaceholder: true,
@@ -163,6 +175,7 @@ export const products = [
     images: [],
     sizes: [],
     firmness: [],
+    audiences: [],
     stockStatus: 'TBD',
     specs: {},
     isPlaceholder: true,

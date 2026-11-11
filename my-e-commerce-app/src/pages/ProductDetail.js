@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { getProductById, getCollectionBySlug } from '../data/products';
 import { formatPrice } from '../utils/format';
+import { useCart } from '../context/CartContext';
 import ProductImage from '../components/ui/ProductImage';
 import Badge from '../components/ui/Badge';
 import Button from '../components/ui/Button';
@@ -10,6 +12,11 @@ import './ProductDetail.css';
 export default function ProductDetail() {
   const { productId } = useParams();
   const product = getProductById(productId);
+  const { addItem } = useCart();
+
+  const [size, setSize] = useState('');
+  const [quantity, setQuantity] = useState(1);
+  const [feedback, setFeedback] = useState('');
 
   if (!product) {
     return (
@@ -23,6 +30,28 @@ export default function ProductDetail() {
 
   const collection = getCollectionBySlug(product.collection);
   const specs = product.specs && Object.keys(product.specs).length > 0 ? product.specs : null;
+  const hasSizes = Array.isArray(product.sizes) && product.sizes.length > 0;
+  const outOfStock = product.stockStatus === 'Out of stock';
+
+  const handleAddToCart = () => {
+    if (hasSizes && !size) {
+      setFeedback('Please choose a size first.');
+      return;
+    }
+
+    const result = addItem(product.id, {
+      size: hasSizes ? size : '',
+      quantity: Number(quantity),
+    });
+
+    if (result.ok) {
+      setFeedback('Added to your cart.');
+    } else if (result.reason === 'out-of-stock') {
+      setFeedback('This product is currently out of stock.');
+    } else {
+      setFeedback('Sorry, this product could not be added to your cart.');
+    }
+  };
 
   return (
     <div className="container page">
@@ -50,6 +79,7 @@ export default function ProductDetail() {
             {product.isPlaceholder && <Badge tone="warning">Sample listing</Badge>}
             {product.stockStatus === 'In stock' && <Badge tone="success">In stock</Badge>}
             {product.stockStatus === 'TBD' && <Badge tone="neutral">Stock status: to be confirmed</Badge>}
+            {outOfStock && <Badge tone="neutral">Out of stock</Badge>}
           </div>
 
           <p className="product-detail__price">{formatPrice(product.price)}</p>
@@ -63,13 +93,64 @@ export default function ProductDetail() {
             </div>
             <div>
               <dt>Available sizes</dt>
-              <dd>{product.sizes && product.sizes.length ? product.sizes.join(', ') : 'To be confirmed'}</dd>
+              <dd>{hasSizes ? product.sizes.join(', ') : 'To be confirmed'}</dd>
             </div>
             <div>
               <dt>Stock status</dt>
               <dd>{product.stockStatus || 'To be confirmed'}</dd>
             </div>
           </dl>
+
+          <div className="product-detail__purchase">
+            {hasSizes ? (
+              <div className="product-detail__control">
+                <label htmlFor="product-size">Size</label>
+                <select
+                  id="product-size"
+                  value={size}
+                  onChange={(event) => {
+                    setSize(event.target.value);
+                    setFeedback('');
+                  }}
+                >
+                  <option value="">Choose a size</option>
+                  {product.sizes.map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </select>
+              </div>
+            ) : null}
+
+            <div className="product-detail__control">
+              <label htmlFor="product-quantity">Quantity</label>
+              <input
+                id="product-quantity"
+                type="number"
+                min="1"
+                max="99"
+                inputMode="numeric"
+                value={quantity}
+                onChange={(event) => setQuantity(event.target.value)}
+              />
+            </div>
+
+            <Button
+              type="button"
+              variant="primary"
+              size="lg"
+              onClick={handleAddToCart}
+              disabled={outOfStock}
+            >
+              Add to cart
+            </Button>
+          </div>
+
+          {feedback ? (
+            <p className="product-detail__feedback" role="status">
+              {feedback}{' '}
+              {feedback === 'Added to your cart.' ? <Link to="/cart">View cart</Link> : null}
+            </p>
+          ) : null}
 
           {specs ? (
             <div className="product-detail__specs">
@@ -90,7 +171,7 @@ export default function ProductDetail() {
           )}
 
           <div className="product-detail__actions">
-            <Button href={site.whatsapp.specialist} variant="primary">
+            <Button href={site.whatsapp.specialist} variant="secondary">
               Ask about this product
             </Button>
             <Button to="/collections" variant="secondary">

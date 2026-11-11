@@ -1,0 +1,70 @@
+.recommendation-form {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+  display: grid;
+  gap: var(--space-5);
+}
+
+.recommendation-form__group {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.recommendation-form__legend {
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  font-size: var(--font-size-lg);
+  padding: 0;
+  margin-bottom: var(--space-3);
+}
+
+.recommendation-form__options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+}
+
+.recommendation-form__option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  background: var(--color-bg);
+  font-weight: 600;
+}
+
+.recommendation-form__option:hover {
+  border-color: var(--color-primary);
+}
+
+.recommendation-form__option:focus-within {
+  box-shadow: var(--focus-ring);
+}
+
+.recommendation-form__option input {
+  accent-color: var(--color-primary);
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: none;
+}
+
+.recommendation-form__error {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+}
+
+@media (max-width: 540px) {
+  .recommendation-form { padding: var(--space-4); }
+}

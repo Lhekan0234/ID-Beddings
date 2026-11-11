@@ -1,16 +1,19 @@
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import site from '../../config/site';
+import { useCart } from '../../context/CartContext';
 import './Header.css';
 
 const navItems = [
   { to: '/', label: 'Home', end: true },
   { to: '/collections', label: 'Collections' },
+  { to: '/find-your-mattress', label: 'Find my mattress' },
   { to: '/contact', label: 'Contact' },
 ];
 
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const { itemCount } = useCart();
 
   const closeMenu = () => setOpen(false);
 
@@ -54,6 +57,21 @@ export default function Header() {
                 </NavLink>
               </li>
             ))}
+            <li>
+              <NavLink
+                to="/cart"
+                className={({ isActive }) =>
+                  `site-header__nav-link site-header__cart ${isActive ? 'is-active' : ''}`
+                }
+                onClick={closeMenu}
+                aria-label={`Cart, ${itemCount} ${itemCount === 1 ? 'item' : 'items'}`}
+              >
+                Cart
+                <span className="site-header__cart-count" aria-hidden="true">
+                  {itemCount}
+                </span>
+              </NavLink>
+            </li>
           </ul>
         </nav>
       </div>

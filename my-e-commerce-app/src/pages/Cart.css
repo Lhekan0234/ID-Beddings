@@ -1,0 +1,115 @@
+.cart-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(280px, 1fr);
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.cart-list {
+  list-style: none;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.cart-item {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr) auto;
+  gap: var(--space-4);
+  align-items: start;
+  padding: var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.cart-item__media {
+  display: block;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.cart-item__body { min-width: 0; }
+
+.cart-item__collection {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: var(--font-size-xs);
+  font-weight: 700;
+  color: var(--color-accent-dark);
+}
+
+.cart-item__title {
+  font-size: var(--font-size-lg);
+  margin: var(--space-1) 0;
+}
+
+.cart-item__size { margin: 0 0 var(--space-1); color: var(--color-text-muted); font-size: var(--font-size-sm); }
+
+.cart-item__unit { margin: 0; font-weight: 600; color: var(--color-primary); }
+
+.cart-item__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.cart-item__qty-label {
+  font-size: var(--font-size-sm);
+  font-weight: 600;
+}
+
+.cart-item__controls input {
+  width: 5rem;
+  padding: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+}
+
+.cart-item__remove {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--color-danger);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.cart-item__total {
+  margin: 0;
+  font-weight: 700;
+  color: var(--color-primary-dark);
+  text-align: right;
+  white-space: nowrap;
+}
+
+.cart-summary {
+  position: sticky;
+  top: calc(var(--header-height) + var(--space-4));
+  display: grid;
+  gap: var(--space-3);
+}
+
+.cart-summary__actions {
+  display: grid;
+  gap: var(--space-2);
+}
+
+@media (max-width: 820px) {
+  .cart-layout { grid-template-columns: 1fr; }
+  .cart-summary { position: static; }
+}
+
+@media (max-width: 540px) {
+  .cart-item {
+    grid-template-columns: 88px minmax(0, 1fr);
+  }
+  .cart-item__total {
+    grid-column: 2;
+    text-align: left;
+  }
+}

@@ -29,6 +29,14 @@ export const site = {
     note: 'Customer service is available Monday through Sunday. Exact opening and closing times will be published once confirmed by the business owner.',
   },
 
+  // Delivery configuration (prd/agent.md section 13 "Delivery configuration").
+  // TODO(owner): supply real delivery charges or rules. Until then we show
+  // "To be confirmed" rather than inventing a fee or delivery promise.
+  delivery: {
+    fee: null,
+    note: 'Delivery charges are confirmed by our team before payment.',
+  },
+
   // True while the catalogue contains placeholder data rather than real,
   // business-supplied products (prd/agent.md section 5).
   catalogueIsPlaceholder: true,

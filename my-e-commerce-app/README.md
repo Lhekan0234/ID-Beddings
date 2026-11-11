@@ -8,11 +8,21 @@ a better night's sleep."*
 Product requirements, business rules and phases live in
 [`prd/agent.md`](prd/agent.md). Follow that file throughout development.
 
-## Current Status: Phase 1 - pending final approval
+## Current Status: Phase 4 - cart & checkout interface complete
 
-The project is still a **Create React App starter**; the storefront, backend and
-admin dashboard are built in later phases (see *Roadmap* below). This document
-and the remaining Phase 1 deliverables are awaiting the owner's final approval.
+Phases 1–4 are implemented and tested: the storefront (home, collections,
+catalogue, search/filter/sort, product detail), the mattress recommendation
+form, and the shopping cart + checkout interface.
+
+**The catalogue still contains clearly-labelled placeholder products** because
+the owner has not yet supplied real product data, prices, images, sizes,
+firmness or stock levels. Nothing has been invented: unknown values display as
+"To be confirmed" / "Price TBD". The business contact details, delivery charges
+and customer-service hours are also still marked `[PENDING]`.
+
+Phase 5 (backend, database and server-side totals) is the next phase. Payment
+integration (Phase 6) must not be treated as live until the merchant account is
+configured and verified.
 
 ## Proposed architecture
 
@@ -53,15 +63,33 @@ invented data are stored in this repo).
 
 ## Roadmap (phases from `prd/agent.md`)
 
-1. **Phase 1 - Audit & Architecture** (this document; pending final approval)
-2. Phase 2 - Storefront, catalogue & collections
-3. Phase 3 - Mattress recommendation form
-4. Phase 4 - Shopping cart & checkout interface
-5. Phase 5 - Backend & database
+1. ✅ **Phase 1 - Audit & Architecture** (documented in this README)
+2. ✅ **Phase 2 - Storefront, catalogue & collections**
+3. ✅ **Phase 3 - Mattress recommendation form**
+4. ✅ **Phase 4 - Shopping cart & checkout interface**
+5. ⏭ **Phase 5 - Backend & database** (next)
 6. Phase 6 - Payment integration & receipts
 7. Phase 7 - Customer records, WhatsApp & delivery tracking
 8. Phase 8 - Admin dashboard & sales reporting
 9. Phase 9 - Security review, testing & deployment
+
+### Implemented routes
+
+| Route | Page |
+| --- | --- |
+| `/` | Home (hero, collections, new arrivals) |
+| `/collections` | Collections overview |
+| `/collections/:collectionSlug` | Collection detail with search/filter/sort |
+| `/shop` | Full catalogue with search/filter/sort |
+| `/products/:productId` | Product detail and add-to-cart |
+| `/find-your-mattress` | Mattress recommendation form and matching results |
+| `/cart` | Shopping cart (quantity updates, removal, totals) |
+| `/checkout` | Delivery details, validation and order review (no order is created yet) |
+| `/contact` | Contact and WhatsApp support |
+
+Cart contents are cached in `localStorage` **only** as a convenience for the
+shopper. Customer records, orders and payments must live in the server-side
+database from Phase 5 (prd/agent.md section 12).
 
 ## Available Scripts
 

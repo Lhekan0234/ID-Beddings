@@ -1,0 +1,21 @@
+.recommendation {
+  max-width: 960px;
+}
+
+.recommendation .page__header {
+  text-align: center;
+  margin-bottom: var(--space-6);
+}
+
+.recommendation__specialist {
+  margin-top: var(--space-5);
+  padding: var(--space-4);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-weight: 600;
+}
+
+@media (max-width: 540px) {
+  .recommendation .page__header { text-align: left; }
+}
