@@ -1,0 +1,19 @@
+.page__header { margin-bottom: var(--space-6); }
+.page__header h1 { margin-bottom: var(--space-2); }
+
+.catalogue-toolbar { display: grid; gap: var(--space-4); margin-bottom: var(--space-4); }
+
+.catalogue-toolbar__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+}
+.catalogue-toolbar__row .filters { flex: 1 1 420px; }
+
+.results-count {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-4);
+}

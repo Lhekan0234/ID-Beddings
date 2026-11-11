@@ -1,0 +1,25 @@
+.product-image {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-md);
+}
+
+.product-image--placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-muted);
+}
+
+.product-image__icon { font-size: 2rem; }
+
+.product-image__hint {
+  font-size: var(--font-size-xs);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
