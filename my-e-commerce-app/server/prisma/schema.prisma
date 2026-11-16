@@ -1,0 +1,207 @@
+// =============================================================================
+// ID Beddings and More - database schema (prd/agent.md sections 11, 12, 13)
+// =============================================================================
+// PostgreSQL via Prisma. Money is stored as whole Naira (Int) to avoid float
+// rounding errors; the business prices in whole Naira.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  CUSTOMER
+}
+
+enum OrderStatus {
+  ORDER_PLACED
+  PAYMENT_CONFIRMED
+  PROCESSING
+  DISPATCHED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+}
+
+enum PaymentMethod {
+  CARD
+  BANK_TRANSFER
+  PAY_BY_BANK
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  passwordHash String
+  name         String?
+  role         Role      @default(CUSTOMER)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  customer     Customer?
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  userId    String?  @unique
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  fullName  String
+  email     String   @unique
+  phone     String
+  address   String
+  state     String
+  city      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+
+  @@index([email])
+}
+
+model Collection {
+  id          String    @id
+  slug        String    @unique
+  name        String
+  description String?
+  position    Int       @default(0)
+  products    Product[]
+}
+
+model Product {
+  id            String         @id
+  slug          String         @unique
+  name          String
+  description   String
+  collectionId  String
+  collection    Collection     @relation(fields: [collectionId], references: [id])
+  price         Int?
+  currency      String         @default("NGN")
+  images        ProductImage[]
+  sizes         String[]       @default([])
+  firmness      String[]       @default([])
+  audiences     String[]       @default([])
+  stockStatus   String         @default("TBD")
+  stockQuantity Int?
+  specs         Json           @default("{}")
+  isPlaceholder Boolean        @default(true)
+  isArchived    Boolean        @default(false)
+  isBestSeller  Boolean        @default(false)
+  isNewArrival  Boolean        @default(false)
+  dateAdded     DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  orderItems    OrderItem[]
+
+  @@index([collectionId])
+  @@index([isArchived])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String?
+  position  Int     @default(0)
+
+  @@index([productId])
+}
+
+model Order {
+  id                    String        @id @default(cuid())
+  reference             String        @unique
+  customerId            String
+  customer              Customer      @relation(fields: [customerId], references: [id])
+  status                OrderStatus   @default(ORDER_PLACED)
+  subtotal              Int
+  deliveryFee           Int?
+  total                 Int
+  currency              String        @default("NGN")
+  paymentStatus         PaymentStatus @default(PENDING)
+  paymentMethod         PaymentMethod?
+  requiresDeliveryQuote Boolean       @default(true)
+  deliveryInstructions  String?
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+  items                 OrderItem[]
+  events                OrderEvent[]
+  payments              Payment[]
+  receipt               Receipt?
+
+  @@index([customerId])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id           String  @id @default(cuid())
+  orderId      String
+  order        Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId    String
+  product      Product @relation(fields: [productId], references: [id])
+  nameSnapshot String
+  size         String?
+  unitPrice    Int
+  quantity     Int
+  lineTotal    Int
+
+  @@index([orderId])
+}
+
+model OrderEvent {
+  id        String       @id @default(cuid())
+  orderId   String
+  order     Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status    OrderStatus?
+  note      String
+  createdAt DateTime     @default(now())
+  createdBy String?
+
+  @@index([orderId])
+}
+
+model Payment {
+  id        String        @id @default(cuid())
+  orderId   String
+  order     Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider  String
+  reference String        @unique
+  status    PaymentStatus @default(PENDING)
+  method    PaymentMethod?
+  amount    Int
+  currency  String        @default("NGN")
+  paidAt    DateTime?
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+  receipt   Receipt?
+
+  @@index([orderId])
+}
+
+model Receipt {
+  id            String   @id @default(cuid())
+  receiptNumber String   @unique
+  orderId       String   @unique
+  order         Order    @relation(fields: [orderId], references: [id])
+  paymentId     String?  @unique
+  payment       Payment? @relation(fields: [paymentId], references: [id])
+  issuedAt      DateTime @default(now())
+  pdfUrl        String?
+}
+
+model Setting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+}

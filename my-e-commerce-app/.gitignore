@@ -34,3 +34,11 @@ yarn-error.log*
 # Additional logs
 *.log
 
+# Backend generated files and local database artefacts
+/server/node_modules
+/server/prisma/*.db
+/server/prisma/migrations/**/migration_lock.toml.bak
+/server/.env
+/server/.env.*
+!/server/.env.example
+

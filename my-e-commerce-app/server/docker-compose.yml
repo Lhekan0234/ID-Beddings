@@ -1,0 +1,23 @@
+# Local development database for ID Beddings and More.
+# The credentials below are for a throwaway local container only.
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: idb-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: idb
+      POSTGRES_PASSWORD: idb_dev_password
+      POSTGRES_DB: idb
+    ports:
+      - "5432:5432"
+    volumes:
+      - idb_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U idb -d idb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  idb_pgdata:

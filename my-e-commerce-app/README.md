@@ -8,11 +8,12 @@ a better night's sleep."*
 Product requirements, business rules and phases live in
 [`prd/agent.md`](prd/agent.md). Follow that file throughout development.
 
-## Current Status: Phase 4 - cart & checkout interface complete
+## Current Status: Phase 5 - backend & database complete
 
-Phases 1–4 are implemented and tested: the storefront (home, collections,
+Phases 1–5 are implemented and tested: the storefront (home, collections,
 catalogue, search/filter/sort, product detail), the mattress recommendation
-form, and the shopping cart + checkout interface.
+form, the shopping cart + checkout interface, and the Express/Prisma/PostgreSQL
+backend with server-side pricing, authentication and order records.
 
 **The catalogue still contains clearly-labelled placeholder products** because
 the owner has not yet supplied real product data, prices, images, sizes,
@@ -20,9 +21,26 @@ firmness or stock levels. Nothing has been invented: unknown values display as
 "To be confirmed" / "Price TBD". The business contact details, delivery charges
 and customer-service hours are also still marked `[PENDING]`.
 
-Phase 5 (backend, database and server-side totals) is the next phase. Payment
-integration (Phase 6) must not be treated as live until the merchant account is
-configured and verified.
+Phase 6 (payment integration & receipts) is the next phase. It must not be
+treated as live until the Paystack merchant account is configured and verified.
+
+### Backend at a glance
+
+```bash
+cd server
+cp .env.example .env      # set JWT_SECRET; ADMIN_* optional
+npm install
+npm run db:up             # PostgreSQL 16 via Docker
+npm run prisma:generate
+npm run migrate
+npm run seed
+npm run dev               # http://localhost:5000
+```
+
+See [`server/README.md`](server/README.md) for the endpoint list and security
+decisions. Requirements: **64-bit Node.js**. This development machine's
+32-bit Node cannot load Prisma's library engine, so the backend was verified
+with a portable 64-bit Node build.
 
 ## Proposed architecture
 
@@ -61,14 +79,24 @@ are git-ignored and must never be committed. Values marked `[PENDING]` must be
 provided by the business owner (they are intentionally blank - no secrets or
 invented data are stored in this repo).
 
+The backend has its own [`server/.env.example`](server/.env.example):
+
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `JWT_SECRET` | Signs session cookies; use a long random value |
+| `PORT` / `CLIENT_ORIGIN` | API port and allowed storefront origin |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Optional; seeds an administrator account |
+| `PAYSTACK_SECRET_KEY` / `PAYSTACK_PUBLIC_KEY` | Phase 6, presently blank |
+
 ## Roadmap (phases from `prd/agent.md`)
 
 1. ✅ **Phase 1 - Audit & Architecture** (documented in this README)
 2. ✅ **Phase 2 - Storefront, catalogue & collections**
 3. ✅ **Phase 3 - Mattress recommendation form**
 4. ✅ **Phase 4 - Shopping cart & checkout interface**
-5. ⏭ **Phase 5 - Backend & database** (next)
-6. Phase 6 - Payment integration & receipts
+5. ✅ **Phase 5 - Backend & database** (Express + Prisma + PostgreSQL, auth, server-side pricing, order records)
+6. ⏭ **Phase 6 - Payment integration & receipts** (next)
 7. Phase 7 - Customer records, WhatsApp & delivery tracking
 8. Phase 8 - Admin dashboard & sales reporting
 9. Phase 9 - Security review, testing & deployment
@@ -84,12 +112,27 @@ invented data are stored in this repo).
 | `/products/:productId` | Product detail and add-to-cart |
 | `/find-your-mattress` | Mattress recommendation form and matching results |
 | `/cart` | Shopping cart (quantity updates, removal, totals) |
-| `/checkout` | Delivery details, validation and order review (no order is created yet) |
+| `/checkout` | Delivery details, validation and order review (the review is a draft; no order is submitted yet) |
 | `/contact` | Contact and WhatsApp support |
 
 Cart contents are cached in `localStorage` **only** as a convenience for the
-shopper. Customer records, orders and payments must live in the server-side
-database from Phase 5 (prd/agent.md section 12).
+shopper. Customer records, orders and payments live in the server-side database
+(prd/agent.md section 12).
+
+## Tests
+
+```bash
+# Storefront (71 tests across 9 suites)
+npm test -- --watchAll=false
+
+# Backend (45 tests across 12 suites; database tests need PostgreSQL)
+cd server && npm test
+```
+
+The backend suite includes unit tests for pricing, recommendations, order
+references and validation, plus integration tests that exercise the API against
+the seeded database. When PostgreSQL is unreachable the integration tests skip
+themselves and the unit tests still run.
 
 ## Available Scripts
 
