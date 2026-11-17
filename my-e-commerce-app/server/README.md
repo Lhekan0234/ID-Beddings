@@ -1,11 +1,12 @@
-# ID Beddings and More — Backend API (Phase 5)
+# ID Beddings and More — Backend API (Phases 5–6)
 
 Express REST API with PostgreSQL (via Prisma) that owns the product catalogue,
-server-side pricing, order records, customer records and authentication.
+server-side pricing, order records, customer records, authentication, Paystack
+payments and PDF receipts.
 
-The React storefront currently still reads its placeholder catalogue from
-`src/data/products.js`; wiring those pages to this API happens as real data and
-the remaining phases land.
+The React storefront reads its placeholder catalogue from `src/data/products.js`
+while real product data is awaited, but checkout, payment verification and
+receipts now call this API.
 
 ## Quick start
 
@@ -26,9 +27,15 @@ Run the tests with:
 npm test
 ```
 
-Database-backed tests skip themselves automatically when PostgreSQL is not
-reachable, so `npm test` still works without Docker. Unit tests for pricing,
-recommendations, references and validation always run.
+The suite has 73 tests across 20 suites: pricing, recommendations, references,
+validation, webhook signatures, payment helpers, and API integration tests
+including a complete initialise → verify → receipt → replay flow against a
+mocked Paystack client. Database-backed tests skip themselves automatically when
+PostgreSQL is not reachable, so `npm test` still works without Docker. Test files
+run one at a time (`--test-concurrency=1`) because the payment test creates
+temporary catalogue records that would otherwise skew catalogue-count tests.
+
+Prisma's default query engine requires a **64-bit Node.js** installation.
 
 ## API endpoints
 
@@ -48,7 +55,12 @@ recommendations, references and validation always run.
 | `POST` | `/api/orders/track` | Public (reference + email) | Secure order lookup |
 | `GET` | `/api/orders` | Signed in | Customer's own orders; admins see all (paginated) |
 | `GET` | `/api/orders/:reference` | Owner or admin | Single order |
+| `PATCH` | `/api/orders/:reference/delivery` | Admin | Confirm the delivery charge (required before payment) |
 | `PATCH` | `/api/orders/:reference/status` | Admin | Fulfilment status + tracking note |
+| `POST` | `/api/orders/:reference/receipt` | Owner, admin or guest with checkout email | Download the PDF receipt (paid orders only) |
+| `POST` | `/api/payments/initialize` | Guest (order reference + email) | Create a payment attempt; returns Paystack's hosted checkout URL |
+| `GET` | `/api/payments/verify/:reference?email=` | Guest (payment reference + email) | Verify with Paystack, validate amount/currency, settle the order |
+| `POST` | `/api/payments/webhook` | Paystack (signature required) | Idempotent charge notifications |
 
 ## Security decisions
 
@@ -64,17 +76,42 @@ recommendations, references and validation always run.
   the same generic 404 for a wrong pair, so references cannot be enumerated.
 - `PAYMENT_CONFIRMED` cannot be set manually; only a verified payment (Phase 6)
   may set it.
+- Payments are initialised server-side for the database order total; the browser
+  never supplies an amount.
+- A payment is settled only after Paystack's verify endpoint (or a
+  signature-verified webhook) reports success, with matching reference, amount
+  (in kobo) and currency.
+- Webhooks are checked against `PAYSTACK_WEBHOOK_SECRET` (timestamped
+  `Paystack-Signature`) or, when that is not configured, the legacy
+  `x-paystack-signature` HMAC. Raw body bytes are used and comparisons are
+  constant-time.
+- Webhook retries and repeated browser verifications are idempotent: a payment
+  can move to `PAID` once, and only one receipt can exist per order.
+- Receipts are PDFs generated on demand and are only available for verified
+  payments. Guests must supply the checkout email; mismatches return the same
+  generic 404 as order tracking.
+- No card number, CVV or other raw card data is ever received or stored.
 
-## Deliberate Phase 5 limitations
+## Deliberate Phase 6 limitations
 
-- **No payment is taken.** Orders are created with `paymentStatus: PENDING`.
-  Paystack integration, webhooks and receipts belong to Phase 6.
-- **Delivery is not priced.** `deliveryFee` is `null` and
-  `requiresDeliveryQuote: true` until the owner supplies charges or rules.
+- **Live payment needs merchant credentials.** Without
+  `PAYSTACK_SECRET_KEY`, `/api/payments/initialize` returns a clear 503. The
+  payment flow was verified with a mocked Paystack client; no live transaction
+  has been made. Test and live keys must never be mixed.
+- **Delivery must be confirmed first.** `deliveryFee` is `null` and
+  `requiresDeliveryQuote: true` until an administrator calls
+  `PATCH /api/orders/:reference/delivery`. Payment is refused before then so an
+  incomplete total is never charged.
 - **The catalogue is placeholder data.** Products have no price, sizes,
   firmness, audiences, images or stock, so recommendations honestly return no
   matches and orders for those products are rejected until real data is added.
-- **No admin UI yet.** The admin API exists behind role checks; the dashboard is
-  Phase 8.
-- **No rate limiting yet.** Add it at the edge or in Phase 9 together with the
-  rest of the security review.
+- **No admin UI yet.** Delivery quotes, order status, sales and receipts are
+  available through protected API endpoints; the dashboard is Phase 8.
+- **Guest access uses reference + email.** Receipt downloads and payment
+  verification require the checkout email in addition to the reference. Rate
+  limiting and abuse monitoring belong to Phase 9.
+- **Webhooks need a public HTTPS URL.** Add
+  `https://<your-api-host>/api/payments/webhook` in the Paystack dashboard and
+  set `PAYSTACK_WEBHOOK_SECRET`. Localhost cannot receive webhooks.
+- **Receipts are download-only.** Automatic email/WhatsApp delivery and order
+  notifications are Phase 7; no receipt is claimed to be sent until then.

@@ -9,6 +9,7 @@ import ProductDetail from './pages/ProductDetail';
 import Recommendation from './pages/Recommendation';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
+import PaymentCallback from './pages/PaymentCallback';
 import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
 
@@ -31,6 +32,7 @@ export default function App() {
           <Route path="find-your-mattress" element={<Recommendation />} />
           <Route path="cart" element={<Cart />} />
           <Route path="checkout" element={<Checkout />} />
+          <Route path="payment/callback" element={<PaymentCallback />} />
           <Route path="contact" element={<Contact />} />
           <Route path="*" element={<NotFound />} />
         </Route>

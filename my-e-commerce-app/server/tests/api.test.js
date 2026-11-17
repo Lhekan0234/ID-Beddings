@@ -12,7 +12,7 @@ async function canReachDatabase() {
     await Promise.race([
       prisma.$queryRawUnsafe('SELECT 1'),
       new Promise((_resolve, reject) => {
-        timer = setTimeout(() => reject(new Error('database timeout')), 3000);
+        timer = setTimeout(() => reject(new Error('database timeout')), 15000);
       }),
     ]);
     return true;

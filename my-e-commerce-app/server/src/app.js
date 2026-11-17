@@ -9,6 +9,7 @@ import productRoutes from './routes/products.js';
 import collectionRoutes from './routes/collections.js';
 import recommendationRoutes from './routes/recommendations.js';
 import orderRoutes from './routes/orders.js';
+import paymentRoutes, { paystackWebhook } from './routes/payments.js';
 
 /**
  * Express application factory (prd/agent.md sections 14 and 15, Phase 5).
@@ -29,6 +30,11 @@ app.use(
     credentials: true,
   })
 );
+// Paystack signs the exact raw bytes of the webhook body. This route MUST be
+// registered before express.json(), otherwise the parser consumes the body and
+// every signature check fails.
+app.post('/api/payments/webhook', express.raw({ type: 'application/json', limit: '100kb' }), paystackWebhook);
+
 app.use(express.json({ limit: '100kb' }));
 app.use(cookieParser());
 
@@ -41,6 +47,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/collections', collectionRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/payments', paymentRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

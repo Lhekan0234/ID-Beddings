@@ -114,3 +114,41 @@ export const paginationQuerySchema = z.object({
   page: z.coerce.number().int().min(1).max(10000).default(1),
   pageSize: z.coerce.number().int().min(1).max(100).default(20),
 });
+
+/* ---------------------------------------------------------------------------
+ * Phase 6 — payments and receipts
+ * -------------------------------------------------------------------------*/
+
+export const initializePaymentSchema = z.object({
+  // The public order reference the customer received at checkout.
+  reference: z.string().trim().min(4).max(60),
+  email: emailSchema,
+});
+
+export const paymentReferenceParamsSchema = z.object({
+  reference: z.string().trim().min(4).max(120),
+});
+
+export const verifyPaymentQuerySchema = z.object({
+  email: emailSchema,
+});
+
+export const receiptRequestSchema = z
+  .object({
+    // Guests prove ownership with the checkout email. Signed-in owners and
+    // administrators do not need to send it.
+    email: emailSchema.optional(),
+  })
+  .default({});
+
+/**
+ * Administrators confirm a delivery charge before payment can be initialised.
+ * Whole Naira only, matching the database's integer money columns.
+ */
+export const updateDeliverySchema = z.object({
+  deliveryFee: z.coerce
+    .number()
+    .int('Enter the delivery charge in whole Naira.')
+    .min(0)
+    .max(100_000_000),
+});

@@ -8,27 +8,31 @@ a better night's sleep."*
 Product requirements, business rules and phases live in
 [`prd/agent.md`](prd/agent.md). Follow that file throughout development.
 
-## Current Status: Phase 5 - backend & database complete
+## Current Status: Phase 6 - payment integration & receipts complete (pending live keys)
 
-Phases 1–5 are implemented and tested: the storefront (home, collections,
-catalogue, search/filter/sort, product detail), the mattress recommendation
-form, the shopping cart + checkout interface, and the Express/Prisma/PostgreSQL
-backend with server-side pricing, authentication and order records.
+Phases 1–6 are implemented and tested: the storefront, the mattress
+recommendation form, the cart + checkout, the Express/Prisma/PostgreSQL backend,
+and Paystack payment initialisation, server-side verification, webhook handling
+and PDF receipts.
 
 **The catalogue still contains clearly-labelled placeholder products** because
 the owner has not yet supplied real product data, prices, images, sizes,
 firmness or stock levels. Nothing has been invented: unknown values display as
-"To be confirmed" / "Price TBD". The business contact details, delivery charges
-and customer-service hours are also still marked `[PENDING]`.
+"To be confirmed" / "Price TBD". Because those products have no confirmed price,
+the server correctly rejects orders for them until real data is added.
 
-Phase 6 (payment integration & receipts) is the next phase. It must not be
-treated as live until the Paystack merchant account is configured and verified.
+**Live payments are not enabled.** The flow is complete and tested against a
+mocked Paystack client, but it needs the owner's Paystack keys, a confirmed
+delivery charge per order, and a public HTTPS webhook URL before a real payment
+can be taken. Test and live keys must never be mixed.
+
+Phase 7 (customer records, WhatsApp and delivery tracking) is the next phase.
 
 ### Backend at a glance
 
 ```bash
 cd server
-cp .env.example .env      # set JWT_SECRET; ADMIN_* optional
+cp .env.example .env      # set JWT_SECRET, PAYSTACK_* and ADMIN_* as needed
 npm install
 npm run db:up             # PostgreSQL 16 via Docker
 npm run prisma:generate
@@ -36,6 +40,11 @@ npm run migrate
 npm run seed
 npm run dev               # http://localhost:5000
 ```
+
+Set `PAYSTACK_WEBHOOK_SECRET` and add
+`https://<your-api-host>/api/payments/webhook` in the Paystack dashboard before
+testing live webhooks. The storefront reads the API URL from
+`REACT_APP_API_URL` (see `.env.example`).
 
 See [`server/README.md`](server/README.md) for the endpoint list and security
 decisions. Requirements: **64-bit Node.js**. This development machine's
@@ -60,16 +69,18 @@ with a portable 64-bit Node build.
 ```text
 my-e-commerce-app/
   prd/agent.md          # requirements & rules (source of truth)
-  server/               # Express API + Prisma (added in Phase 5)
-    routes/ controllers/ middleware/
-    prisma/             # schema.prisma + migrations
+  server/               # Express API + Prisma (Phases 5–6)
+    src/routes/ src/middleware/ src/services/
+    prisma/             # schema.prisma + migrations + seed
+    tests/
     .env.example
   public/
   src/                  # React client
+    api/                # storefront API client
     components/         # reusable UI (Nav, Footer, ProductCard, ...)
     pages/              # Home, Collections, ProductDetail, Cart, Admin/*, ...
     context/            # Cart + Auth state
-    data/ or api/       # client API calls
+    data/               # placeholder catalogue until real data is supplied
 ```
 
 ## Environment Variables
@@ -87,7 +98,15 @@ The backend has its own [`server/.env.example`](server/.env.example):
 | `JWT_SECRET` | Signs session cookies; use a long random value |
 | `PORT` / `CLIENT_ORIGIN` | API port and allowed storefront origin |
 | `ADMIN_EMAIL` / `ADMIN_PASSWORD` | Optional; seeds an administrator account |
-| `PAYSTACK_SECRET_KEY` / `PAYSTACK_PUBLIC_KEY` | Phase 6, presently blank |
+| `PAYSTACK_SECRET_KEY` / `PAYSTACK_PUBLIC_KEY` | Paystack credentials (server-side only) |
+| `PAYSTACK_WEBHOOK_SECRET` | `whsec_...` signing secret for webhook verification |
+| `PAYMENT_CALLBACK_URL` | Where Paystack returns the customer (defaults to `/payment/callback`) |
+
+The storefront reads one variable:
+
+| Variable | Purpose |
+| --- | --- |
+| `REACT_APP_API_URL` | API base URL (default `http://localhost:5000/api`) |
 
 ## Roadmap (phases from `prd/agent.md`)
 
@@ -96,8 +115,8 @@ The backend has its own [`server/.env.example`](server/.env.example):
 3. ✅ **Phase 3 - Mattress recommendation form**
 4. ✅ **Phase 4 - Shopping cart & checkout interface**
 5. ✅ **Phase 5 - Backend & database** (Express + Prisma + PostgreSQL, auth, server-side pricing, order records)
-6. ⏭ **Phase 6 - Payment integration & receipts** (next)
-7. Phase 7 - Customer records, WhatsApp & delivery tracking
+6. ✅ **Phase 6 - Payment integration & receipts** (Paystack init/verify, signed idempotent webhooks, PDF receipts; live keys required)
+7. ⏭ **Phase 7 - Customer records, WhatsApp & delivery tracking** (next)
 8. Phase 8 - Admin dashboard & sales reporting
 9. Phase 9 - Security review, testing & deployment
 
@@ -112,7 +131,8 @@ The backend has its own [`server/.env.example`](server/.env.example):
 | `/products/:productId` | Product detail and add-to-cart |
 | `/find-your-mattress` | Mattress recommendation form and matching results |
 | `/cart` | Shopping cart (quantity updates, removal, totals) |
-| `/checkout` | Delivery details, validation and order review (the review is a draft; no order is submitted yet) |
+| `/checkout` | Delivery details, server-priced order and Paystack checkout |
+| `/payment/callback` | Verifies the payment with the server, shows status and downloads the receipt |
 | `/contact` | Contact and WhatsApp support |
 
 Cart contents are cached in `localStorage` **only** as a convenience for the
@@ -122,17 +142,21 @@ shopper. Customer records, orders and payments live in the server-side database
 ## Tests
 
 ```bash
-# Storefront (71 tests across 9 suites)
+# Storefront (84 tests across 11 suites)
 npm test -- --watchAll=false
 
-# Backend (45 tests across 12 suites; database tests need PostgreSQL)
+# Backend (73 tests across 20 suites; database tests need PostgreSQL)
 cd server && npm test
 ```
 
-The backend suite includes unit tests for pricing, recommendations, order
-references and validation, plus integration tests that exercise the API against
-the seeded database. When PostgreSQL is unreachable the integration tests skip
-themselves and the unit tests still run.
+The storefront tests cover the catalogue, recommendations, cart, checkout
+validation, the API client and the server-verified payment callback.
+
+The backend suite includes unit tests for pricing, recommendations, order and
+payment references, validation and webhook signatures, plus integration tests
+for the API and a complete initialise → verify → receipt → replay payment flow
+against a mocked Paystack client. When PostgreSQL is unreachable the integration
+tests skip themselves and the unit tests still run.
 
 ## Available Scripts
 

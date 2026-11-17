@@ -2,16 +2,19 @@ import { Router } from 'express';
 import prisma from '../db.js';
 import { asyncHandler } from '../utils/async.js';
 import { validate } from '../middleware/validate.js';
-import { authenticate, requireAdmin } from '../middleware/auth.js';
+import { authenticate, identify, requireAdmin } from '../middleware/auth.js';
 import { ApiError } from '../middleware/errors.js';
 import { priceOrder } from '../services/pricing.js';
 import { generateOrderReference } from '../services/reference.js';
+import { buildReceiptPdf } from '../services/receiptPdf.js';
 import { serialiseOrder } from '../serialisers.js';
 import {
   createOrderSchema,
   orderReferenceParamsSchema,
   paginationQuerySchema,
+  receiptRequestSchema,
   trackOrderSchema,
+  updateDeliverySchema,
   updateOrderStatusSchema,
 } from '../validation/schemas.js';
 
@@ -246,6 +249,116 @@ router.patch(
     });
 
     res.json({ order: serialiseOrder(order) });
+  })
+);
+
+/**
+ * PATCH /api/orders/:reference/delivery — an administrator confirms the
+ * delivery charge. Payment cannot start until this has been done, because the
+ * customer must see a complete total (prd/agent.md section 8).
+ */
+router.patch(
+  '/:reference/delivery',
+  authenticate,
+  requireAdmin,
+  validate({ params: orderReferenceParamsSchema, body: updateDeliverySchema }),
+  asyncHandler(async (req, res) => {
+    const { reference } = req.params;
+    const { deliveryFee } = req.body;
+
+    const existing = await prisma.order.findUnique({ where: { reference } });
+    if (!existing) {
+      throw ApiError.notFound('Order not found.');
+    }
+    if (existing.paymentStatus === 'PAID') {
+      throw ApiError.conflict('The delivery charge on a paid order cannot be changed.');
+    }
+
+    const order = await prisma.order.update({
+      where: { reference },
+      data: {
+        deliveryFee,
+        total: existing.subtotal + deliveryFee,
+        requiresDeliveryQuote: false,
+        events: {
+          create: {
+            status: existing.status,
+            note:
+              deliveryFee === 0
+                ? 'Delivery charge confirmed: free delivery.'
+                : `Delivery charge confirmed: NGN ${deliveryFee.toLocaleString('en-NG')}.`,
+            createdBy: req.user.email,
+          },
+        },
+      },
+      include: orderInclude,
+    });
+
+    res.json({ order: serialiseOrder(order) });
+  })
+);
+
+/**
+ * POST /api/orders/:reference/receipt — downloadable PDF receipt.
+ *
+ * Available only after the server has verified payment. Signed-in owners and
+ * administrators are authorised by session; guests must supply the checkout
+ * email, and a mismatch returns the same not-found response used elsewhere so
+ * orders cannot be probed.
+ */
+router.post(
+  '/:reference/receipt',
+  identify,
+  validate({ params: orderReferenceParamsSchema, body: receiptRequestSchema }),
+  asyncHandler(async (req, res) => {
+    const order = await prisma.order.findUnique({
+      where: { reference: req.params.reference },
+      include: {
+        customer: true,
+        items: true,
+        payments: { where: { status: 'PAID' }, orderBy: { paidAt: 'desc' } },
+        receipt: true,
+      },
+    });
+
+    if (!order) {
+      throw ApiError.notFound('Order not found.');
+    }
+
+    const user = req.user;
+    const isAdmin = user?.role === 'ADMIN';
+    const isOwner =
+      Boolean(user) &&
+      (order.customer?.userId === user.id ||
+        order.customer?.email?.toLowerCase() === user.email.toLowerCase());
+
+    if (!isAdmin && !isOwner) {
+      const email = req.body.email;
+      if (!email || email !== order.customer?.email?.toLowerCase()) {
+        throw ApiError.notFound('No order matches that reference and email address.');
+      }
+    }
+
+    if (order.paymentStatus !== 'PAID' || !order.receipt) {
+      throw new ApiError(
+        409,
+        'A receipt is available only after payment has been verified. This order is still awaiting payment.'
+      );
+    }
+
+    const pdf = await buildReceiptPdf({
+      order,
+      payment: order.payments[0] || null,
+      receipt: order.receipt,
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="receipt-${order.receipt.receiptNumber}.pdf"`
+    );
+    res.setHeader('Cache-Control', 'private, no-store');
+    res.send(pdf);
   })
 );
 

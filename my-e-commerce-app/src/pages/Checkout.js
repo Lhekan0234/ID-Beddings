@@ -5,24 +5,32 @@ import {
   emptyCheckoutValues,
   validateCheckout,
 } from '../utils/checkout';
+import {
+  createOrder,
+  initializePayment,
+  rememberLastOrder,
+} from '../api/client';
 import EmptyState from '../components/ui/EmptyState';
 import Button from '../components/ui/Button';
 import OrderSummary from '../components/cart/OrderSummary';
 import './Checkout.css';
 
 /**
- * Checkout interface (prd/agent.md section 8, Phase 4).
+ * Checkout (prd/agent.md sections 8 and 9, Phases 4–6).
  *
- * Collects the required delivery details and validates them in the browser.
- * No order is created and no payment is taken: order creation, server-side
- * re-validation and payment belong to Phases 5–6, so the review step is
- * explicitly labelled as a draft rather than pretending an order exists.
+ * The form is validated in the browser for quick feedback, then the server
+ * re-validates everything and recalculates the total. Payment is initialised on
+ * the server and the customer is redirected to Paystack's hosted checkout; card
+ * details never touch this application.
  */
 export default function Checkout() {
   const { items, subtotal, hasUnknownPrices } = useCart();
   const [values, setValues] = useState(emptyCheckoutValues);
   const [errors, setErrors] = useState({});
   const [review, setReview] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [placedOrder, setPlacedOrder] = useState(null);
 
   const update = (name) => (event) => {
     setValues((current) => ({ ...current, [name]: event.target.value }));
@@ -42,7 +50,53 @@ export default function Checkout() {
       return;
     }
 
+    setSubmitError('');
     setReview({ values: { ...values } });
+  };
+
+  const handlePlaceOrder = async () => {
+    if (submitting || !review) return;
+
+    setSubmitting(true);
+    setSubmitError('');
+
+    try {
+      // 1. The server creates the order and recalculates every price.
+      const { order } = await createOrder({
+        items: items.map((item) => ({
+          productId: item.productId,
+          size: item.size,
+          quantity: item.quantity,
+        })),
+        customer: {
+          fullName: review.values.fullName.trim(),
+          email: review.values.email.trim(),
+          phone: review.values.phone.trim(),
+          address: review.values.address.trim(),
+          state: review.values.state.trim(),
+          city: review.values.city.trim(),
+          deliveryInstructions: review.values.deliveryInstructions.trim(),
+        },
+      });
+
+      setPlacedOrder(order);
+      rememberLastOrder({ reference: order.reference, email: order.customer.email });
+
+      // 2. Payment is initialised server-side for the server's total.
+      const payment = await initializePayment({
+        reference: order.reference,
+        email: order.customer.email,
+      });
+
+      // 3. Hosted checkout. The redirect is not treated as proof of payment;
+      //    /payment/callback verifies the transaction with the server.
+      window.location.assign(payment.authorizationUrl);
+    } catch (error) {
+      setSubmitError(
+        error?.message || 'We could not start the payment. Please try again.'
+      );
+      setSubmitting(false);
+    }
   };
 
   if (items.length === 0) {
@@ -89,15 +143,45 @@ export default function Checkout() {
             </dl>
 
             <div className="checkout__notice" role="note">
-              <strong>Draft order — not submitted.</strong> Order creation and
-              secure payment will be enabled once the backend (Phase 5) and
-              payment gateway (Phase 6) are connected. No payment has been
-              requested and no order reference exists yet.
+              <strong>Payment is requested on the server.</strong> Prices, stock
+              and the total are re-checked before the order is created. You will
+              continue to Paystack&apos;s secure checkout; card details are never
+              entered on this site.
             </div>
 
+            {placedOrder ? (
+              <div className="checkout__notice" role="alert">
+                <strong>Order created — {placedOrder.reference}.</strong> No
+                payment has been confirmed yet. Keep this reference; you can use
+                it with your email address to check the order.
+              </div>
+            ) : null}
+
+            {submitError ? (
+              <div className="checkout__notice checkout__notice--error" role="alert">
+                {submitError}
+              </div>
+            ) : null}
+
             <div className="checkout__actions">
-              <Button type="button" variant="secondary" onClick={() => setReview(null)}>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setReview(null);
+                  setSubmitError('');
+                }}
+                disabled={submitting}
+              >
                 Edit details
+              </Button>
+              <Button
+                type="button"
+                variant="primary"
+                onClick={handlePlaceOrder}
+                disabled={submitting}
+              >
+                {submitting ? 'Starting secure payment…' : 'Place order & pay'}
               </Button>
               <Button to="/cart" variant="secondary">
                 Back to cart

@@ -78,6 +78,31 @@ export async function authenticate(req, res, next) {
   }
 }
 
+/**
+ * Attach `req.user` when a valid session cookie/token is present, but never
+ * reject the request. Used by endpoints that support both guests and signed-in
+ * owners (for example, downloading a receipt with a reference + email).
+ */
+export async function identify(req, _res, next) {
+  const token = readToken(req);
+  if (!token) {
+    next();
+    return;
+  }
+
+  try {
+    const payload = jwt.verify(token, config.jwtSecret);
+    const user = await prisma.user.findUnique({
+      where: { id: payload.sub },
+      select: { id: true, email: true, name: true, role: true },
+    });
+    if (user) req.user = user;
+  } catch {
+    // An invalid token is treated as "not signed in" for optional auth.
+  }
+  next();
+}
+
 /** Require an authenticated user (run after `authenticate`). */
 export function requireAuth(req, _res, next) {
   if (!req.user) {

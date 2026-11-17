@@ -63,6 +63,22 @@ export function serialiseProduct(product) {
   };
 }
 
+export function serialisePayment(payment) {
+  if (!payment) return null;
+  return {
+    reference: payment.reference,
+    provider: payment.provider,
+    status: payment.status,
+    amount: payment.amount,
+    currency: payment.currency,
+    method: payment.method || null,
+    channel: payment.channel || null,
+    paidAt: payment.paidAt || null,
+    verifiedAt: payment.verifiedAt || null,
+    failureReason: payment.failureReason || null,
+  };
+}
+
 export function serialiseOrder(order) {
   if (!order) return null;
 
