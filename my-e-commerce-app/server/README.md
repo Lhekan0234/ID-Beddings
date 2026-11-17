@@ -1,12 +1,12 @@
-# ID Beddings and More — Backend API (Phases 5–6)
+# ID Beddings and More — Backend API (Phases 5–7)
 
 Express REST API with PostgreSQL (via Prisma) that owns the product catalogue,
 server-side pricing, order records, customer records, authentication, Paystack
 payments and PDF receipts.
 
 The React storefront reads its placeholder catalogue from `src/data/products.js`
-while real product data is awaited, but checkout, payment verification and
-receipts now call this API.
+while real product data is awaited, but checkout, payment verification, receipts,
+customer accounts and order tracking now call this API.
 
 ## Quick start
 
@@ -27,12 +27,13 @@ Run the tests with:
 npm test
 ```
 
-The suite has 73 tests across 20 suites: pricing, recommendations, references,
-validation, webhook signatures, payment helpers, and API integration tests
-including a complete initialise → verify → receipt → replay flow against a
-mocked Paystack client. Database-backed tests skip themselves automatically when
-PostgreSQL is not reachable, so `npm test` still works without Docker. Test files
-run one at a time (`--test-concurrency=1`) because the payment test creates
+The suite has 92 tests across 24 suites: pricing, recommendations, references,
+validation, webhook signatures, payment helpers, order status transitions, and
+API integration tests including customer access, secure tracking and a complete
+initialise → verify → receipt → replay flow against a mocked Paystack client.
+Database-backed tests skip themselves automatically when PostgreSQL is not
+reachable, so `npm test` still works without Docker. Test files run one at a
+time (`--test-concurrency=1`) because the payment and customer tests create
 temporary catalogue records that would otherwise skew catalogue-count tests.
 
 Prisma's default query engine requires a **64-bit Node.js** installation.
@@ -61,6 +62,10 @@ Prisma's default query engine requires a **64-bit Node.js** installation.
 | `POST` | `/api/payments/initialize` | Guest (order reference + email) | Create a payment attempt; returns Paystack's hosted checkout URL |
 | `GET` | `/api/payments/verify/:reference?email=` | Guest (payment reference + email) | Verify with Paystack, validate amount/currency, settle the order |
 | `POST` | `/api/payments/webhook` | Paystack (signature required) | Idempotent charge notifications |
+| `GET` | `/api/customers/me` | Signed in | Own saved customer record (or `null`) |
+| `GET` | `/api/customers/me/orders` | Signed in | Own persistent order history (paginated) |
+| `GET` | `/api/customers?q=&page=&pageSize=` | Admin | Search customer records |
+| `GET` | `/api/customers/:id` | Admin | Customer record with full order history |
 
 ## Security decisions
 
@@ -91,8 +96,17 @@ Prisma's default query engine requires a **64-bit Node.js** installation.
   payments. Guests must supply the checkout email; mismatches return the same
   generic 404 as order tracking.
 - No card number, CVV or other raw card data is ever received or stored.
+- Customer records are linked to an account by `userId` or matching email on
+  register/sign-in; no profile is invented at registration.
+- Customer endpoints verify ownership or admin role on every request and return
+  only safe fields (no password hash, no other customer's id).
+- Status transitions are server-enforced: payment cannot be confirmed manually,
+  fulfilment cannot start before verified payment, notes are required for
+  dispatch stages, and cancelled/delivered orders are terminal.
+- Tracking responses include recorded notes only and explicitly set
+  `isLiveGps: false`; no GPS or delivery promise is claimed.
 
-## Deliberate Phase 6 limitations
+## Deliberate Phase 7 limitations
 
 - **Live payment needs merchant credentials.** Without
   `PAYSTACK_SECRET_KEY`, `/api/payments/initialize` returns a clear 503. The
@@ -113,5 +127,14 @@ Prisma's default query engine requires a **64-bit Node.js** installation.
 - **Webhooks need a public HTTPS URL.** Add
   `https://<your-api-host>/api/payments/webhook` in the Paystack dashboard and
   set `PAYSTACK_WEBHOOK_SECRET`. Localhost cannot receive webhooks.
-- **Receipts are download-only.** Automatic email/WhatsApp delivery and order
-  notifications are Phase 7; no receipt is claimed to be sent until then.
+- **Receipts remain download-only.** No email or WhatsApp delivery provider is
+  configured, so no notification is claimed to have been sent. The tracking page
+  lets the customer copy an enquiry to paste into a verified channel.
+- **WhatsApp destinations are unconfirmed.** The supplied links were checked on
+  2026-11-17 and open catalogue views, not direct chats; the owner must confirm
+  which business and destination each link represents.
+- **No retention policy is automated yet.** Customer records are stored in
+  PostgreSQL with access controls; a deletion/retention schedule must be agreed
+  with the owner before launch (Phase 9).
+- **No admin UI yet.** Customer search, delivery quotes and status updates are
+  protected API endpoints; the dashboard is Phase 8.

@@ -8,6 +8,8 @@ const navItems = [
   { to: '/', label: 'Home', end: true },
   { to: '/collections', label: 'Collections' },
   { to: '/find-your-mattress', label: 'Find my mattress' },
+  { to: '/track', label: 'Track order' },
+  { to: '/account', label: 'Account' },
   { to: '/contact', label: 'Contact' },
 ];
 

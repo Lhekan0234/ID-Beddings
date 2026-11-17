@@ -10,6 +10,8 @@ import Recommendation from './pages/Recommendation';
 import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import PaymentCallback from './pages/PaymentCallback';
+import TrackOrder from './pages/TrackOrder';
+import Account from './pages/Account';
 import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
 
@@ -33,6 +35,8 @@ export default function App() {
           <Route path="cart" element={<Cart />} />
           <Route path="checkout" element={<Checkout />} />
           <Route path="payment/callback" element={<PaymentCallback />} />
+          <Route path="track" element={<TrackOrder />} />
+          <Route path="account" element={<Account />} />
           <Route path="contact" element={<Contact />} />
           <Route path="*" element={<NotFound />} />
         </Route>

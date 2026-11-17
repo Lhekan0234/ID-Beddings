@@ -71,6 +71,44 @@ export function verifyPayment(reference, email) {
   return apiRequest(`/payments/verify/${encodeURIComponent(reference)}?${query}`);
 }
 
+/* ---------------------------------------------------------------------------
+ * Phase 7 — account access, customer records and delivery tracking
+ * -------------------------------------------------------------------------*/
+
+export function trackOrder(reference, email) {
+  return apiRequest('/orders/track', {
+    method: 'POST',
+    body: { reference, email },
+  });
+}
+
+export function getAuthUser() {
+  return apiRequest('/auth/me');
+}
+
+export function logIn(email, password) {
+  return apiRequest('/auth/login', { method: 'POST', body: { email, password } });
+}
+
+export function registerAccount(name, email, password) {
+  return apiRequest('/auth/register', {
+    method: 'POST',
+    body: { name, email, password },
+  });
+}
+
+export function logOut() {
+  return apiRequest('/auth/logout', { method: 'POST' });
+}
+
+export function getMyCustomer() {
+  return apiRequest('/customers/me');
+}
+
+export function getMyOrders() {
+  return apiRequest('/customers/me/orders');
+}
+
 /**
  * Download the PDF receipt. The server only returns a file after it has
  * verified payment; a pending order gets a JSON 409 instead.

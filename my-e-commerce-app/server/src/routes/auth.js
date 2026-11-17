@@ -18,6 +18,19 @@ const router = Router();
 const BCRYPT_ROUNDS = 12;
 
 /**
+ * If the customer previously ordered as a guest, attach that real record to
+ * the new account so their order history is available after signing in. We
+ * never create a customer record here: no address or phone is supplied at
+ * registration, and inventing one is forbidden.
+ */
+async function linkGuestCustomer(userId, email) {
+  await prisma.customer.updateMany({
+    where: { email, userId: null },
+    data: { userId },
+  });
+}
+
+/**
  * Create a customer account. The role is never taken from the request body:
  * every self-registered account is a CUSTOMER. Administrators are created by
  * the seed script from server-side environment variables.
@@ -39,6 +52,8 @@ router.post(
       select: { id: true, email: true, name: true, role: true },
     });
 
+    await linkGuestCustomer(user.id, user.email);
+
     setAuthCookie(res, signAuthToken(user));
     res.status(201).json({ user: serialiseUser(user) });
   })
@@ -57,6 +72,8 @@ router.post(
     if (!valid) {
       throw ApiError.unauthorised('Incorrect email or password.');
     }
+
+    await linkGuestCustomer(user.id, user.email);
 
     setAuthCookie(res, signAuthToken(user));
     res.json({ user: serialiseUser(user) });

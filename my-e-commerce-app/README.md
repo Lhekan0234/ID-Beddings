@@ -8,12 +8,13 @@ a better night's sleep."*
 Product requirements, business rules and phases live in
 [`prd/agent.md`](prd/agent.md). Follow that file throughout development.
 
-## Current Status: Phase 6 - payment integration & receipts complete (pending live keys)
+## Current Status: Phase 7 - customer records, WhatsApp & delivery tracking complete
 
-Phases 1–6 are implemented and tested: the storefront, the mattress
+Phases 1–7 are implemented and tested: the storefront, the mattress
 recommendation form, the cart + checkout, the Express/Prisma/PostgreSQL backend,
-and Paystack payment initialisation, server-side verification, webhook handling
-and PDF receipts.
+Paystack payment initialisation, server-side verification, webhook handling and
+PDF receipts, plus customer accounts, secure order tracking and enforced
+fulfilment status transitions.
 
 **The catalogue still contains clearly-labelled placeholder products** because
 the owner has not yet supplied real product data, prices, images, sizes,
@@ -26,7 +27,13 @@ mocked Paystack client, but it needs the owner's Paystack keys, a confirmed
 delivery charge per order, and a public HTTPS webhook URL before a real payment
 can be taken. Test and live keys must never be mixed.
 
-Phase 7 (customer records, WhatsApp and delivery tracking) is the next phase.
+**WhatsApp links are still pending owner confirmation.** Both supplied URLs were
+checked on 2026-11-17: they open catalogue views ("Ogunsusi Enterprise" and
+"Marvel Madeen Homes and Properties"), not confirmed direct chats. The UI
+therefore labels them as catalogue destinations and does not promise a chat or
+send notifications through them.
+
+Phase 8 (admin dashboard and sales reporting) is the next phase.
 
 ### Backend at a glance
 
@@ -116,8 +123,8 @@ The storefront reads one variable:
 4. ✅ **Phase 4 - Shopping cart & checkout interface**
 5. ✅ **Phase 5 - Backend & database** (Express + Prisma + PostgreSQL, auth, server-side pricing, order records)
 6. ✅ **Phase 6 - Payment integration & receipts** (Paystack init/verify, signed idempotent webhooks, PDF receipts; live keys required)
-7. ⏭ **Phase 7 - Customer records, WhatsApp & delivery tracking** (next)
-8. Phase 8 - Admin dashboard & sales reporting
+7. ✅ **Phase 7 - Customer records, WhatsApp & delivery tracking** (no GPS claims; links pending owner confirmation)
+8. ⏭ **Phase 8 - Admin dashboard & sales reporting** (next)
 9. Phase 9 - Security review, testing & deployment
 
 ### Implemented routes
@@ -133,6 +140,8 @@ The storefront reads one variable:
 | `/cart` | Shopping cart (quantity updates, removal, totals) |
 | `/checkout` | Delivery details, server-priced order and Paystack checkout |
 | `/payment/callback` | Verifies the payment with the server, shows status and downloads the receipt |
+| `/track` | Secure order tracking with reference + checkout email, recorded notes and receipts |
+| `/account` | Sign in / register, saved customer details and persistent order history |
 | `/contact` | Contact and WhatsApp support |
 
 Cart contents are cached in `localStorage` **only** as a convenience for the
@@ -142,21 +151,23 @@ shopper. Customer records, orders and payments live in the server-side database
 ## Tests
 
 ```bash
-# Storefront (84 tests across 11 suites)
+# Storefront (96 tests across 14 suites)
 npm test -- --watchAll=false
 
-# Backend (73 tests across 20 suites; database tests need PostgreSQL)
+# Backend (92 tests across 24 suites; database tests need PostgreSQL)
 cd server && npm test
 ```
 
 The storefront tests cover the catalogue, recommendations, cart, checkout
-validation, the API client and the server-verified payment callback.
+validation, the API client, the server-verified payment callback, secure order
+tracking, customer accounts and WhatsApp link handling.
 
 The backend suite includes unit tests for pricing, recommendations, order and
-payment references, validation and webhook signatures, plus integration tests
-for the API and a complete initialise → verify → receipt → replay payment flow
-against a mocked Paystack client. When PostgreSQL is unreachable the integration
-tests skip themselves and the unit tests still run.
+payment references, validation, webhook signatures and status transitions, plus
+integration tests for the API, customer records/tracking and a complete
+initialise → verify → receipt → replay payment flow against a mocked Paystack
+client. When PostgreSQL is unreachable the integration tests skip themselves and
+the unit tests still run.
 
 ## Available Scripts
 

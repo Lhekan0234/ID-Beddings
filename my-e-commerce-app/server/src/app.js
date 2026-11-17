@@ -10,6 +10,7 @@ import collectionRoutes from './routes/collections.js';
 import recommendationRoutes from './routes/recommendations.js';
 import orderRoutes from './routes/orders.js';
 import paymentRoutes, { paystackWebhook } from './routes/payments.js';
+import customerRoutes from './routes/customers.js';
 
 /**
  * Express application factory (prd/agent.md sections 14 and 15, Phase 5).
@@ -48,6 +49,7 @@ app.use('/api/collections', collectionRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/customers', customerRoutes);
 
 app.use(notFoundHandler);
 app.use(errorHandler);

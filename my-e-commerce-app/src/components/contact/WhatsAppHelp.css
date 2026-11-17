@@ -1,0 +1,38 @@
+.whatsapp-help {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-6);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.whatsapp-help h2 {
+  font-size: var(--font-size-lg);
+  margin: 0;
+}
+
+.whatsapp-help p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.whatsapp-help__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.whatsapp-help__hint {
+  font-size: var(--font-size-sm);
+}
+
+.whatsapp-help__pending {
+  font-size: var(--font-size-sm);
+  color: var(--color-warning);
+  background: var(--color-warning-bg);
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+}

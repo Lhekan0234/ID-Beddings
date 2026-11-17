@@ -5,6 +5,7 @@ import { validate } from '../middleware/validate.js';
 import { authenticate, identify, requireAdmin } from '../middleware/auth.js';
 import { ApiError } from '../middleware/errors.js';
 import { priceOrder } from '../services/pricing.js';
+import { assertValidOrderStatusUpdate } from '../services/orderStatus.js';
 import { generateOrderReference } from '../services/reference.js';
 import { buildReceiptPdf } from '../services/receiptPdf.js';
 import { serialiseOrder } from '../serialisers.js';
@@ -226,12 +227,20 @@ router.patch(
   asyncHandler(async (req, res) => {
     const { status, note } = req.body;
 
-    if (status === 'PAYMENT_CONFIRMED') {
-      throw new ApiError(
-        409,
-        'Payment confirmation is recorded only after the payment provider verifies a transaction.'
-      );
+    const existing = await prisma.order.findUnique({
+      where: { reference: req.params.reference },
+      select: { status: true, paymentStatus: true },
+    });
+    if (!existing) {
+      throw ApiError.notFound('Order not found.');
     }
+
+    assertValidOrderStatusUpdate({
+      currentStatus: existing.status,
+      paymentStatus: existing.paymentStatus,
+      nextStatus: status,
+      note,
+    });
 
     const order = await prisma.order.update({
       where: { reference: req.params.reference },

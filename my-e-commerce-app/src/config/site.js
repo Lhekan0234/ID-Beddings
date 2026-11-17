@@ -11,8 +11,11 @@ export const site = {
   currencySymbol: '₦',
 
   // WhatsApp destinations supplied by the owner (prd/agent.md section 4).
-  // TODO(owner): Verify each URL opens the intended destination. A catalogue
-  // link is not necessarily a direct chat link.
+  // Checked 2026-11-17: the first URL opens the "Ogunsusi Enterprise" catalogue
+  // and the second opens the "Marvel Madeen Homes and Properties" catalogue.
+  // Both are catalogue views, not confirmed direct chats, and the second title
+  // does not by itself confirm the "mattress specialist" label. The owner must
+  // confirm the intended destinations before `verified` is set to true.
   whatsapp: {
     catalogue: 'https://wa.me/c/2349087201583',
     specialist: 'https://wa.me/c/2348038526476',

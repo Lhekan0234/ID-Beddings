@@ -3,6 +3,23 @@
  * Keeping this in one place avoids leaking database fields (password hashes,
  * internal ids for other customers, etc.) through the API.
  */
+import { buildTrackingTimeline } from './services/orderStatus.js';
+
+/** Customer details safe to return to the owner or an administrator. */
+export function serialiseCustomer(customer, { orderCount } = {}) {
+  if (!customer) return null;
+  return {
+    id: customer.id,
+    fullName: customer.fullName,
+    email: customer.email,
+    phone: customer.phone,
+    address: customer.address,
+    state: customer.state,
+    city: customer.city,
+    createdAt: customer.createdAt,
+    orderCount: typeof orderCount === 'number' ? orderCount : undefined,
+  };
+}
 
 export function serialiseUser(user) {
   return {
@@ -124,5 +141,6 @@ export function serialiseOrder(order) {
           createdAt: event.createdAt,
         }))
       : [],
+    tracking: buildTrackingTimeline(order),
   };
 }

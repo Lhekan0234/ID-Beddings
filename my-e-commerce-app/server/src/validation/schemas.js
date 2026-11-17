@@ -152,3 +152,15 @@ export const updateDeliverySchema = z.object({
     .min(0)
     .max(100_000_000),
 });
+
+/* ---------------------------------------------------------------------------
+ * Phase 7 — customer records
+ * -------------------------------------------------------------------------*/
+
+export const customerSearchQuerySchema = paginationQuerySchema.extend({
+  q: z.string().trim().max(120).default(''),
+});
+
+export const customerIdParamsSchema = z.object({
+  id: z.string().trim().min(1).max(120),
+});

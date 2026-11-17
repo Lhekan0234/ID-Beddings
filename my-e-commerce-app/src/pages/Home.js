@@ -24,7 +24,7 @@ export default function Home() {
             </Button>
             <Button to="/collections" variant="primary" size="lg">Shop collections</Button>
             <Button href={site.whatsapp.specialist} variant="secondary" size="lg">
-              Chat with a specialist
+              View mattress catalogue
             </Button>
           </div>
         </div>

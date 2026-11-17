@@ -21,8 +21,8 @@ export default function Contact() {
             Browse the full product catalogue or speak with a mattress specialist.
           </p>
           <div className="contact__actions">
-            <Button href={whatsapp.catalogue} variant="primary">View catalogue on WhatsApp</Button>
-            <Button href={whatsapp.specialist} variant="secondary">Chat with a specialist</Button>
+            <Button href={whatsapp.catalogue} variant="primary">View main catalogue on WhatsApp</Button>
+            <Button href={whatsapp.specialist} variant="secondary">View supplied catalogue link</Button>
           </div>
           {!whatsapp.verified && (
             <p className="contact__pending">
