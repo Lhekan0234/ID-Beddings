@@ -172,32 +172,38 @@ model OrderEvent {
 }
 
 model Payment {
-  id        String        @id @default(cuid())
-  orderId   String
-  order     Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  provider  String
-  reference String        @unique
-  status    PaymentStatus @default(PENDING)
-  method    PaymentMethod?
-  amount    Int
-  currency  String        @default("NGN")
-  paidAt    DateTime?
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  receipt   Receipt?
+  id              String        @id @default(cuid())
+  orderId         String
+  order           Order         @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  provider        String
+  reference       String        @unique
+  status          PaymentStatus @default(PENDING)
+  method          PaymentMethod?
+  amount          Int
+  currency        String        @default("NGN")
+  channel         String?
+  failureReason   String?
+  verifiedAt      DateTime?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  receipt         Receipt?
 
   @@index([orderId])
 }
 
 model Receipt {
-  id            String   @id @default(cuid())
-  receiptNumber String   @unique
-  orderId       String   @unique
-  order         Order    @relation(fields: [orderId], references: [id])
-  paymentId     String?  @unique
-  payment       Payment? @relation(fields: [paymentId], references: [id])
-  issuedAt      DateTime @default(now())
-  pdfUrl        String?
+  id                   String        @id @default(cuid())
+  receiptNumber        String        @unique
+  orderId              String        @unique
+  order                Order         @relation(fields: [orderId], references: [id])
+  paymentId            String?       @unique
+  payment              Payment?      @relation(fields: [paymentId], references: [id])
+  totalPaid            Int
+  paymentMethod        PaymentMethod?
+  transactionReference String
+  issuedAt             DateTime      @default(now())
+  pdfUrl               String?
 }
 
 model Setting {
