@@ -1,4 +1,4 @@
-# ID Beddings and More — Backend API (Phases 5–7)
+# ID Beddings and More — Backend API (Phases 5–8)
 
 Express REST API with PostgreSQL (via Prisma) that owns the product catalogue,
 server-side pricing, order records, customer records, authentication, Paystack
@@ -6,7 +6,8 @@ payments and PDF receipts.
 
 The React storefront reads its placeholder catalogue from `src/data/products.js`
 while real product data is awaited, but checkout, payment verification, receipts,
-customer accounts and order tracking now call this API.
+customer accounts, order tracking and the protected admin dashboard now call
+this API.
 
 ## Quick start
 
@@ -27,14 +28,15 @@ Run the tests with:
 npm test
 ```
 
-The suite has 92 tests across 24 suites: pricing, recommendations, references,
-validation, webhook signatures, payment helpers, order status transitions, and
-API integration tests including customer access, secure tracking and a complete
-initialise → verify → receipt → replay flow against a mocked Paystack client.
-Database-backed tests skip themselves automatically when PostgreSQL is not
-reachable, so `npm test` still works without Docker. Test files run one at a
-time (`--test-concurrency=1`) because the payment and customer tests create
-temporary catalogue records that would otherwise skew catalogue-count tests.
+The suite has 109 tests across 26 suites: pricing, recommendations, references,
+validation, webhook signatures, payment helpers, order status transitions,
+verified-revenue and CSV safety, and API integration tests including customer
+access, secure tracking, protected admin reporting/catalogue/settings and a
+complete initialise → verify → receipt → replay flow against a mocked Paystack
+client. Database-backed tests skip themselves automatically when PostgreSQL is
+not reachable, so `npm test` still works without Docker. Test files run one at a
+time (`--test-concurrency=1`) because the integration tests create temporary
+catalogue records that would otherwise skew catalogue-count tests.
 
 Prisma's default query engine requires a **64-bit Node.js** installation.
 
@@ -66,6 +68,17 @@ Prisma's default query engine requires a **64-bit Node.js** installation.
 | `GET` | `/api/customers/me/orders` | Signed in | Own persistent order history (paginated) |
 | `GET` | `/api/customers?q=&page=&pageSize=` | Admin | Search customer records |
 | `GET` | `/api/customers/:id` | Admin | Customer record with full order history |
+| `GET` | `/api/admin/overview` | Admin | Real-DB revenue, order/customer counts and recent verified payments |
+| `GET` | `/api/admin/sales` | Admin | Searchable/filterable payment records and verified revenue |
+| `GET` | `/api/admin/sales/export.csv` | Admin | CSV export with escaped cells and formula neutralisation |
+| `GET` | `/api/admin/products` | Admin | Product management list (includes archived) |
+| `POST` | `/api/admin/products` | Admin | Add a product with images, prices, sizes and stock |
+| `PATCH` | `/api/admin/products/:id` | Admin | Update prices, stock, images, flags and archive state |
+| `GET` | `/api/admin/collections` | Admin | All collections with product counts |
+| `POST` | `/api/admin/collections` | Admin | Add a collection |
+| `PATCH` | `/api/admin/collections/:id` | Admin | Rename or reorder a collection |
+| `GET` | `/api/admin/settings` | Admin | Owner-supplied business settings with blank defaults |
+| `PUT` | `/api/admin/settings` | Admin | Save contact, hours, WhatsApp links and delivery config |
 
 ## Security decisions
 
@@ -105,8 +118,16 @@ Prisma's default query engine requires a **64-bit Node.js** installation.
   dispatch stages, and cancelled/delivered orders are terminal.
 - Tracking responses include recorded notes only and explicitly set
   `isLiveGps: false`; no GPS or delivery promise is claimed.
+- **Every admin endpoint is protected on the server** with `authenticate` and
+  `requireAdmin`; hiding the React `/admin` link is not an access control.
+- Verified revenue is computed only from payments whose status is `PAID`;
+  pending, failed and expired attempts are never reported as sales.
+- CSV exports escape quotes/commas/newlines and prefix formula-like cells with
+  an apostrophe so spreadsheets cannot execute them.
+- The WhatsApp `verified` flag is not writable through the settings API; only
+  the owner can confirm a destination outside the dashboard.
 
-## Deliberate Phase 7 limitations
+## Deliberate Phase 8 limitations
 
 - **Live payment needs merchant credentials.** Without
   `PAYSTACK_SECRET_KEY`, `/api/payments/initialize` returns a clear 503. The
@@ -119,8 +140,9 @@ Prisma's default query engine requires a **64-bit Node.js** installation.
 - **The catalogue is placeholder data.** Products have no price, sizes,
   firmness, audiences, images or stock, so recommendations honestly return no
   matches and orders for those products are rejected until real data is added.
-- **No admin UI yet.** Delivery quotes, order status, sales and receipts are
-  available through protected API endpoints; the dashboard is Phase 8.
+- **Admin data is as good as the records entered.** The dashboard reports real
+  database rows only; an empty report means no matching record, never invented
+  sales. Owner-supplied contact details stay blank until saved in Settings.
 - **Guest access uses reference + email.** Receipt downloads and payment
   verification require the checkout email in addition to the reference. Rate
   limiting and abuse monitoring belong to Phase 9.
@@ -136,5 +158,6 @@ Prisma's default query engine requires a **64-bit Node.js** installation.
 - **No retention policy is automated yet.** Customer records are stored in
   PostgreSQL with access controls; a deletion/retention schedule must be agreed
   with the owner before launch (Phase 9).
-- **No admin UI yet.** Customer search, delivery quotes and status updates are
-  protected API endpoints; the dashboard is Phase 8.
+- **No delivery or notification integration.** Admin status notes are manual;
+  no courier API or message provider is configured, so no delivery promise or
+  sent notification is claimed.

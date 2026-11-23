@@ -12,6 +12,7 @@ import Checkout from './pages/Checkout';
 import PaymentCallback from './pages/PaymentCallback';
 import TrackOrder from './pages/TrackOrder';
 import Account from './pages/Account';
+import Admin from './pages/Admin';
 import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
 
@@ -37,6 +38,7 @@ export default function App() {
           <Route path="payment/callback" element={<PaymentCallback />} />
           <Route path="track" element={<TrackOrder />} />
           <Route path="account" element={<Account />} />
+          <Route path="admin" element={<Admin />} />
           <Route path="contact" element={<Contact />} />
           <Route path="*" element={<NotFound />} />
         </Route>

@@ -8,13 +8,13 @@ a better night's sleep."*
 Product requirements, business rules and phases live in
 [`prd/agent.md`](prd/agent.md). Follow that file throughout development.
 
-## Current Status: Phase 7 - customer records, WhatsApp & delivery tracking complete
+## Current Status: Phase 8 - protected admin dashboard & sales reporting complete
 
-Phases 1–7 are implemented and tested: the storefront, the mattress
-recommendation form, the cart + checkout, the Express/Prisma/PostgreSQL backend,
-Paystack payment initialisation, server-side verification, webhook handling and
-PDF receipts, plus customer accounts, secure order tracking and enforced
-fulfilment status transitions.
+Phases 1–8 are implemented: the storefront, the mattress recommendation form,
+the cart + checkout, the Express/Prisma/PostgreSQL backend, Paystack payment
+initialisation, server-side verification, webhook handling and PDF receipts,
+customer accounts, secure order tracking, enforced fulfilment status transitions,
+and a protected admin dashboard with sales reporting and catalogue management.
 
 **The catalogue still contains clearly-labelled placeholder products** because
 the owner has not yet supplied real product data, prices, images, sizes,
@@ -33,7 +33,13 @@ checked on 2026-11-17: they open catalogue views ("Ogunsusi Enterprise" and
 therefore labels them as catalogue destinations and does not promise a chat or
 send notifications through them.
 
-Phase 8 (admin dashboard and sales reporting) is the next phase.
+**The admin area is protected on the server.** Every `/api/admin/*` endpoint
+requires an authenticated administrator; hiding the `/admin` link is not the
+security boundary. Verified revenue is calculated only from `PAID` payments, and
+CSV exports escape cells and neutralise spreadsheet formulas. The WhatsApp
+`verified` flag cannot be changed through the API.
+
+Phase 9 (security review, testing and deployment) is the next phase.
 
 ### Backend at a glance
 
@@ -124,8 +130,8 @@ The storefront reads one variable:
 5. ✅ **Phase 5 - Backend & database** (Express + Prisma + PostgreSQL, auth, server-side pricing, order records)
 6. ✅ **Phase 6 - Payment integration & receipts** (Paystack init/verify, signed idempotent webhooks, PDF receipts; live keys required)
 7. ✅ **Phase 7 - Customer records, WhatsApp & delivery tracking** (no GPS claims; links pending owner confirmation)
-8. ⏭ **Phase 8 - Admin dashboard & sales reporting** (next)
-9. Phase 9 - Security review, testing & deployment
+8. ✅ **Phase 8 - Admin dashboard & sales reporting** (server-side access control; real-DB figures)
+9. ⏭ **Phase 9 - Security review, testing & deployment** (next)
 
 ### Implemented routes
 
@@ -142,6 +148,7 @@ The storefront reads one variable:
 | `/payment/callback` | Verifies the payment with the server, shows status and downloads the receipt |
 | `/track` | Secure order tracking with reference + checkout email, recorded notes and receipts |
 | `/account` | Sign in / register, saved customer details and persistent order history |
+| `/admin` | Protected admin dashboard: Overview, Sales, Products, Orders, Customers, Settings |
 | `/contact` | Contact and WhatsApp support |
 
 Cart contents are cached in `localStorage` **only** as a convenience for the
@@ -151,23 +158,24 @@ shopper. Customer records, orders and payments live in the server-side database
 ## Tests
 
 ```bash
-# Storefront (96 tests across 14 suites)
-npm test -- --watchAll=false
+# Storefront (100 tests across 15 suites)
+npm test -- --watchAll=false -- --runInBand
 
-# Backend (92 tests across 24 suites; database tests need PostgreSQL)
+# Backend (109 tests across 26 suites; database tests need PostgreSQL)
 cd server && npm test
 ```
 
 The storefront tests cover the catalogue, recommendations, cart, checkout
 validation, the API client, the server-verified payment callback, secure order
-tracking, customer accounts and WhatsApp link handling.
+tracking, customer accounts, WhatsApp link handling and admin access control.
 
 The backend suite includes unit tests for pricing, recommendations, order and
-payment references, validation, webhook signatures and status transitions, plus
-integration tests for the API, customer records/tracking and a complete
-initialise → verify → receipt → replay payment flow against a mocked Paystack
-client. When PostgreSQL is unreachable the integration tests skip themselves and
-the unit tests still run.
+payment references, validation, webhook signatures, status transitions and safe
+CSV/verified-revenue reporting, plus integration tests for the API, customer
+records/tracking, protected admin endpoints and a complete initialise → verify →
+receipt → replay payment flow against a mocked Paystack client. When PostgreSQL
+is unreachable the integration tests skip themselves and the unit tests still
+run.
 
 ## Available Scripts
 

@@ -109,6 +109,122 @@ export function getMyOrders() {
   return apiRequest('/customers/me/orders');
 }
 
+/* ---------------------------------------------------------------------------
+ * Phase 8 — protected admin dashboard
+ * -------------------------------------------------------------------------*/
+
+export function getAdminOverview() {
+  return apiRequest('/admin/overview');
+}
+
+export function getAdminSales(filters = {}) {
+  const query = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      query.set(key, String(value));
+    }
+  });
+  const suffix = query.toString();
+  return apiRequest(`/admin/sales${suffix ? `?${suffix}` : ''}`);
+}
+
+export function getAdminSettings() {
+  return apiRequest('/admin/settings');
+}
+
+export function saveAdminSettings(values) {
+  return apiRequest('/admin/settings', { method: 'PUT', body: values });
+}
+
+export function getAdminProducts(filters = {}) {
+  const query = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      query.set(key, String(value));
+    }
+  });
+  const suffix = query.toString();
+  return apiRequest(`/admin/products${suffix ? `?${suffix}` : ''}`);
+}
+
+export function createAdminProduct(values) {
+  return apiRequest('/admin/products', { method: 'POST', body: values });
+}
+
+export function updateAdminProduct(id, values) {
+  return apiRequest(`/admin/products/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: values,
+  });
+}
+
+export function getAdminCollections() {
+  return apiRequest('/admin/collections');
+}
+
+export function createAdminCollection(values) {
+  return apiRequest('/admin/collections', { method: 'POST', body: values });
+}
+
+export function updateAdminCollection(id, values) {
+  return apiRequest(`/admin/collections/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
+    body: values,
+  });
+}
+
+export function getAdminCustomers(filters = {}) {
+  const query = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      query.set(key, String(value));
+    }
+  });
+  const suffix = query.toString();
+  return apiRequest(`/customers${suffix ? `?${suffix}` : ''}`);
+}
+
+export function getAdminCustomer(id) {
+  return apiRequest(`/customers/${encodeURIComponent(id)}`);
+}
+
+export function getAdminOrders(filters = {}) {
+  const query = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      query.set(key, String(value));
+    }
+  });
+  const suffix = query.toString();
+  return apiRequest(`/orders${suffix ? `?${suffix}` : ''}`);
+}
+
+export function updateOrderStatus(reference, values) {
+  return apiRequest(`/orders/${encodeURIComponent(reference)}/status`, {
+    method: 'PATCH',
+    body: values,
+  });
+}
+
+export function confirmDeliveryFee(reference, deliveryFee) {
+  return apiRequest(`/orders/${encodeURIComponent(reference)}/delivery`, {
+    method: 'PATCH',
+    body: { deliveryFee },
+  });
+}
+
+/** Build a CSV export URL that still sends the httpOnly admin cookie. */
+export function adminSalesCsvUrl(filters = {}) {
+  const query = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      query.set(key, String(value));
+    }
+  });
+  const suffix = query.toString();
+  return apiUrl(`/admin/sales/export.csv${suffix ? `?${suffix}` : ''}`);
+}
+
 /**
  * Download the PDF receipt. The server only returns a file after it has
  * verified payment; a pending order gets a JSON 409 instead.

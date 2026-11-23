@@ -164,3 +164,134 @@ export const customerSearchQuerySchema = paginationQuerySchema.extend({
 export const customerIdParamsSchema = z.object({
   id: z.string().trim().min(1).max(120),
 });
+
+/* ---------------------------------------------------------------------------
+ * Phase 8 — admin dashboard and reporting
+ * -------------------------------------------------------------------------*/
+
+const dateString = z
+  .string()
+  .trim()
+  .regex(/^\d{4}-\d{2}-\d{2}$/, 'Use a date in YYYY-MM-DD format.')
+  .refine((value) => !Number.isNaN(new Date(value).getTime()), 'Enter a real date.');
+
+export const adminSalesQuerySchema = paginationQuerySchema.extend({
+  q: z.string().trim().max(120).default(''),
+  from: dateString.optional(),
+  to: dateString.optional(),
+  paymentMethod: z.enum(['CARD', 'BANK_TRANSFER', 'PAY_BY_BANK']).optional(),
+  paymentStatus: z.enum(['PENDING', 'PAID', 'FAILED', 'EXPIRED']).optional(),
+});
+
+export const adminProductListQuerySchema = paginationQuerySchema.extend({
+  q: z.string().trim().max(120).default(''),
+  includeArchived: z.enum(['true', 'false']).default('true'),
+});
+
+const imageUrl = z
+  .string()
+  .trim()
+  .max(500)
+  .refine(
+    (value) => /^https?:\/\/\S+$/i.test(value) || value.startsWith('/'),
+    'Use an http(s) URL or a path starting with /.' )
+  .optional();
+
+const smallList = z.array(z.string().trim().min(1).max(40)).max(30);
+
+const productBase = {
+  name: z.string().trim().min(2).max(160),
+  description: z.string().trim().min(10).max(3000),
+  collectionId: z.string().trim().min(1).max(120),
+  price: z.coerce.number().int('Enter the price in whole Naira.').min(0).max(100_000_000),
+  currency: z.literal('NGN').default('NGN'),
+  sizes: smallList.default([]),
+  firmness: smallList.default([]),
+  audiences: smallList.default([]),
+  stockStatus: z.enum(['In stock', 'Out of stock', 'TBD']).default('TBD'),
+  stockQuantity: z.coerce.number().int().min(0).max(1_000_000).nullable().default(null),
+  images: z.array(imageUrl).max(20).default([]),
+  isBestSeller: z.boolean().default(false),
+  isNewArrival: z.boolean().default(false),
+  isArchived: z.boolean().default(false),
+};
+
+export const adminProductCreateSchema = z.object({
+  ...productBase,
+  slug: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use a lowercase, hyphenated slug.')
+    .max(160)
+    .optional(),
+});
+
+export const adminProductUpdateSchema = z
+  .object(productBase)
+  .partial()
+  .refine((value) => Object.keys(value).length > 0, 'Supply at least one field to update.');
+
+export const adminCollectionCreateSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  slug: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/, 'Use a lowercase, hyphenated slug.')
+    .max(120),
+  description: z.string().trim().max(1000).optional().default(''),
+  position: z.coerce.number().int().min(0).max(10000).default(0),
+});
+
+export const adminCollectionUpdateSchema = z
+  .object(adminCollectionCreateSchema.shape)
+  .partial()
+  .refine((value) => Object.keys(value).length > 0, 'Supply at least one field to update.');
+
+const optionalWhatsappUrl = z
+  .string()
+  .trim()
+  .max(300)
+  .refine(
+    (value) => value === '' || /^https:\/\/wa\.me\/(?:c\/)?\d{8,15}$/.test(value),
+    'Use a valid https://wa.me destination or leave it blank.'
+  );
+
+const optionalContactText = (max) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .nullable()
+    .refine(
+      (value) => value === null || value === '' || value.length > 1,
+      'Leave blank or enter a real value.'
+    );
+
+export const adminSettingsSchema = z
+  .object({
+    contact: z
+      .object({
+        phone: optionalContactText(60).optional(),
+        email: emailSchema.or(z.literal('')).nullable().optional(),
+        address: optionalContactText(300).optional(),
+      })
+      .strict()
+      .optional(),
+    hours: optionalContactText(200).optional(),
+    whatsapp: z
+      .object({
+        catalogue: optionalWhatsappUrl.optional(),
+        specialist: optionalWhatsappUrl.optional(),
+      })
+      .strict()
+      .optional(),
+    delivery: z
+      .object({
+        fee: z.coerce.number().int().min(0).max(100_000_000).nullable().optional(),
+        note: optionalContactText(500).optional(),
+      })
+      .strict()
+      .optional(),
+  })
+  .strict()
+  .refine((value) => Object.keys(value).length > 0, 'Supply at least one setting to save.');
