@@ -4,7 +4,7 @@ import ProductGrid from './ProductGrid';
 
 /**
  * Renders a product list with loading, error and empty states.
- * props: { products, loading, error, emptyTitle, emptyMessage }
+ * props: { products, loading, error, emptyTitle, emptyMessage, emptyAction }
  */
 export default function ProductList({
   products,
@@ -12,6 +12,7 @@ export default function ProductList({
   error = null,
   emptyTitle = 'No products found',
   emptyMessage,
+  emptyAction,
 }) {
   if (loading) {
     return <Spinner label="Loading products…" />;
@@ -26,7 +27,7 @@ export default function ProductList({
   }
 
   if (!products || products.length === 0) {
-    return <EmptyState title={emptyTitle} message={emptyMessage} />;
+    return <EmptyState title={emptyTitle} message={emptyMessage} action={emptyAction} />;
   }
 
   return <ProductGrid products={products} />;

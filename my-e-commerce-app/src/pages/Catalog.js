@@ -5,6 +5,7 @@ import SearchBar from '../components/catalogue/SearchBar';
 import Filters from '../components/catalogue/Filters';
 import SortSelect from '../components/catalogue/SortSelect';
 import ProductList from '../components/catalogue/ProductList';
+import WhatsAppMoreInfo from '../components/contact/WhatsAppMoreInfo';
 import './Catalog.css';
 
 const emptyCriteria = { collection: '', firmness: '', size: '', inStockOnly: false, query: '' };
@@ -39,6 +40,7 @@ export default function Catalog() {
         products={results}
         emptyTitle="No products match your filters"
         emptyMessage="Try adjusting your search or filters across the owner-supplied catalogue."
+        emptyAction={<WhatsAppMoreInfo />}
       />
     </div>
   );

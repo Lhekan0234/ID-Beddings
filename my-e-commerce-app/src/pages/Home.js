@@ -3,6 +3,7 @@ import site from '../config/site';
 import { collections, getNewArrivals } from '../data/products';
 import Button from '../components/ui/Button';
 import ProductCard from '../components/catalogue/ProductCard';
+import WhatsAppMoreInfo from '../components/contact/WhatsAppMoreInfo';
 import './Home.css';
 
 export default function Home() {
@@ -73,7 +74,7 @@ export default function Home() {
             ))}
           </ul>
         ) : (
-          <p className="text-muted">New arrivals will be announced once the owner confirms them.</p>
+          <WhatsAppMoreInfo />
         )}
       </section>
     </div>

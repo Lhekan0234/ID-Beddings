@@ -49,6 +49,25 @@ describe('App storefront routing', () => {
     expect(screen.getByRole('heading', { name: /collections/i, level: 1 })).toBeInTheDocument();
   });
 
+  it('replaces empty bundle rows with WhatsApp guidance', () => {
+    renderAt('/collections');
+    expect(
+      screen.getAllByText('contact the whatsapp number for more information')
+    ).toHaveLength(2);
+    expect(screen.queryByText('0 products')).not.toBeInTheDocument();
+  });
+
+  it('shows WhatsApp guidance on an empty collection page', () => {
+    renderAt('/collections/new-home-bundle');
+    expect(
+      screen.getByText('contact the whatsapp number for more information')
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Business catalogue' })).toHaveAttribute(
+      'href',
+      'https://wa.me/c/2349087201583'
+    );
+  });
+
   it('renders the contact page', () => {
     renderAt('/contact');
     expect(screen.getByRole('heading', { name: /contact & support/i })).toBeInTheDocument();

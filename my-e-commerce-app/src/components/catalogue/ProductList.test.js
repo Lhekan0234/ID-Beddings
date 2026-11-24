@@ -36,6 +36,17 @@ describe('ProductList states', () => {
     expect(screen.getByText('No products found')).toBeInTheDocument();
   });
 
+  it('renders an optional empty-state action', () => {
+    render(
+      <ProductList
+        products={[]}
+        emptyTitle="No products found"
+        emptyAction={<a href="/collections">Browse collections</a>}
+      />
+    );
+    expect(screen.getByRole('link', { name: /browse collections/i })).toBeInTheDocument();
+  });
+
   it('renders product cards when products exist', () => {
     renderWithRouter(<ProductList products={sampleProducts} />);
     expect(screen.getByText('Budget Sleep Mattress (sample)')).toBeInTheDocument();

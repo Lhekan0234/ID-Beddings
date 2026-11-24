@@ -11,6 +11,9 @@ import site from '../config/site';
 
 const WA_ME_URL = /^https:\/\/wa\.me\/(?:c\/)?\d{8,15}$/;
 
+/** Exact guidance shown wherever the catalogue has nothing to display. */
+export const WHATSAPP_MORE_INFO_MESSAGE = 'contact the whatsapp number for more information';
+
 export function isOwnerSuppliedWhatsappUrl(url) {
   return typeof url === 'string' && WA_ME_URL.test(url);
 }

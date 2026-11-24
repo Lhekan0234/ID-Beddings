@@ -9,6 +9,7 @@ import SearchBar from '../components/catalogue/SearchBar';
 import Filters from '../components/catalogue/Filters';
 import SortSelect from '../components/catalogue/SortSelect';
 import ProductList from '../components/catalogue/ProductList';
+import WhatsAppMoreInfo from '../components/contact/WhatsAppMoreInfo';
 import './CollectionDetail.css';
 
 const emptyCriteria = { collection: '', firmness: '', size: '', inStockOnly: false, query: '' };
@@ -30,6 +31,8 @@ export default function CollectionDetail() {
     () => queryProducts(baseProducts, { ...criteria, collection: '' }, sortBy),
     [baseProducts, criteria, sortBy]
   );
+
+  const collectionIsEmpty = baseProducts.length === 0;
 
   if (!collection) {
     return (
@@ -68,10 +71,13 @@ export default function CollectionDetail() {
 
       <ProductList
         products={results}
-        emptyTitle="No products match your filters"
-        emptyMessage={baseProducts.length === 0
-          ? 'The owner has not supplied products for this collection yet.'
+        emptyTitle={collectionIsEmpty
+          ? 'More information available on WhatsApp'
+          : 'No products match your filters'}
+        emptyMessage={collectionIsEmpty
+          ? undefined
           : 'Try adjusting your search or filters.'}
+        emptyAction={collectionIsEmpty ? <WhatsAppMoreInfo /> : null}
       />
     </div>
   );
