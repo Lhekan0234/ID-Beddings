@@ -1,3 +1,8 @@
+.product-image-wrap {
+  display: block;
+  position: relative;
+}
+
 .product-image {
   width: 100%;
   aspect-ratio: 4 / 3;
@@ -22,4 +27,16 @@
   font-size: var(--font-size-xs);
   text-transform: uppercase;
   letter-spacing: 0.04em;
+}
+
+.product-image__note {
+  position: absolute;
+  right: var(--space-2);
+  bottom: var(--space-2);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-md);
+  background: rgba(35, 32, 28, 0.78);
+  color: var(--color-text-inverse);
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.03em;
 }

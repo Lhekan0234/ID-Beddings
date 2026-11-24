@@ -7,7 +7,7 @@ import {
   useCart,
 } from './CartContext';
 
-const PLACEHOLDER_ID = 'budget-sleep-sample-1';
+const PRODUCT_ID = 'comfy-1';
 
 function wrapper({ children }) {
   return <CartProvider>{children}</CartProvider>;
@@ -32,12 +32,12 @@ describe('readStoredCart', () => {
       CART_STORAGE_KEY,
       JSON.stringify([
         { productId: 'does-not-exist', quantity: 1 },
-        { productId: PLACEHOLDER_ID, quantity: 500, size: 'Queen' },
+        { productId: PRODUCT_ID, quantity: 500, size: 'Queen' },
       ])
     );
 
     expect(readStoredCart()).toEqual([
-      { productId: PLACEHOLDER_ID, size: 'Queen', quantity: 99 },
+      { productId: PRODUCT_ID, size: 'Queen', quantity: 99 },
     ]);
   });
 });
@@ -70,14 +70,15 @@ describe('CartProvider', () => {
     const { result } = renderHook(() => useCart(), { wrapper });
 
     act(() => {
-      result.current.addItem(PLACEHOLDER_ID, { quantity: 2 });
+      result.current.addItem(PRODUCT_ID, { quantity: 2 });
     });
 
     expect(result.current.items).toHaveLength(1);
     expect(result.current.itemCount).toBe(2);
-    expect(result.current.hasUnknownPrices).toBe(true);
+    expect(result.current.hasUnknownPrices).toBe(false);
+    expect(result.current.subtotal).toBe(53172); // owner price ₦26,586 × 2
     expect(JSON.parse(window.localStorage.getItem(CART_STORAGE_KEY))).toEqual([
-      { productId: PLACEHOLDER_ID, size: '', quantity: 2 },
+      { productId: PRODUCT_ID, size: '', quantity: 2 },
     ]);
   });
 
@@ -85,10 +86,10 @@ describe('CartProvider', () => {
     const { result } = renderHook(() => useCart(), { wrapper });
 
     act(() => {
-      result.current.addItem(PLACEHOLDER_ID, { quantity: 2 });
+      result.current.addItem(PRODUCT_ID, { quantity: 2 });
     });
     act(() => {
-      result.current.addItem(PLACEHOLDER_ID, { quantity: 3 });
+      result.current.addItem(PRODUCT_ID, { quantity: 3 });
     });
 
     expect(result.current.items).toHaveLength(1);
@@ -99,10 +100,10 @@ describe('CartProvider', () => {
     const { result } = renderHook(() => useCart(), { wrapper });
 
     act(() => {
-      result.current.addItem(PLACEHOLDER_ID, { size: 'Queen', quantity: 1 });
+      result.current.addItem(PRODUCT_ID, { size: 'Queen', quantity: 1 });
     });
     act(() => {
-      result.current.addItem(PLACEHOLDER_ID, { size: 'King', quantity: 1 });
+      result.current.addItem(PRODUCT_ID, { size: 'King', quantity: 1 });
     });
 
     expect(result.current.items).toHaveLength(2);
@@ -112,15 +113,15 @@ describe('CartProvider', () => {
     const { result } = renderHook(() => useCart(), { wrapper });
 
     act(() => {
-      result.current.addItem(PLACEHOLDER_ID, { quantity: 2 });
+      result.current.addItem(PRODUCT_ID, { quantity: 2 });
     });
     act(() => {
-      result.current.updateQuantity(PLACEHOLDER_ID, '', 4);
+      result.current.updateQuantity(PRODUCT_ID, '', 4);
     });
     expect(result.current.itemCount).toBe(4);
 
     act(() => {
-      result.current.updateQuantity(PLACEHOLDER_ID, '', 0);
+      result.current.updateQuantity(PRODUCT_ID, '', 0);
     });
     expect(result.current.items).toHaveLength(0);
   });
@@ -140,7 +141,7 @@ describe('CartProvider', () => {
   it('rehydrates a saved cart on mount', () => {
     window.localStorage.setItem(
       CART_STORAGE_KEY,
-      JSON.stringify([{ productId: PLACEHOLDER_ID, size: '', quantity: 3 }])
+      JSON.stringify([{ productId: PRODUCT_ID, size: '', quantity: 3 }])
     );
 
     const { result } = renderHook(() => useCart(), { wrapper });
@@ -152,7 +153,7 @@ describe('CartProvider', () => {
     const { result } = renderHook(() => useCart(), { wrapper });
 
     act(() => {
-      result.current.addItem(PLACEHOLDER_ID, { quantity: 2 });
+      result.current.addItem(PRODUCT_ID, { quantity: 2 });
     });
     act(() => {
       result.current.clearCart();

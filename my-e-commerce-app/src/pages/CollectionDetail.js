@@ -69,7 +69,9 @@ export default function CollectionDetail() {
       <ProductList
         products={results}
         emptyTitle="No products match your filters"
-        emptyMessage="Try adjusting your search or filters. Real catalogue data will be added by the business owner."
+        emptyMessage={baseProducts.length === 0
+          ? 'The owner has not supplied products for this collection yet.'
+          : 'Try adjusting your search or filters.'}
       />
     </div>
   );

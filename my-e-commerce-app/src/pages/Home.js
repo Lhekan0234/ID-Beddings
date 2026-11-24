@@ -73,7 +73,7 @@ export default function Home() {
             ))}
           </ul>
         ) : (
-          <p className="text-muted">New arrivals will appear here once the catalogue is available.</p>
+          <p className="text-muted">New arrivals will be announced once the owner confirms them.</p>
         )}
       </section>
     </div>

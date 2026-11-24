@@ -16,11 +16,27 @@ initialisation, server-side verification, webhook handling and PDF receipts,
 customer accounts, secure order tracking, enforced fulfilment status transitions,
 and a protected admin dashboard with sales reporting and catalogue management.
 
-**The catalogue still contains clearly-labelled placeholder products** because
-the owner has not yet supplied real product data, prices, images, sizes,
-firmness or stock levels. Nothing has been invented: unknown values display as
-"To be confirmed" / "Price TBD". Because those products have no confirmed price,
-the server correctly rejects orders for them until real data is added.
+**The catalogue now uses the owner's real price list (124 size/price rows across
+14 bed lines), transcribed from the price sheet supplied on 2026-11-24.** The
+raw transcription lives in `src/data/ownerCatalogue.mjs` and is shared with the
+backend seed so the API and storefront cannot drift. Each size is its own
+product because the owner quotes a different unit price per size.
+
+The owner's own groups are kept as `tier` badges: **LUXURY** (33 rows),
+**COMFORT** (66) and **VALUE** (25). Products are placed into the seven existing
+collections using the bed names and price bands: Budget Sleep holds COMFY,
+MOUKA KIDDIES and BABY MATTRESS; Better Sleep holds FLORA, SUPER FLORA and FLORA
+PREMIER; Orthopedic Collection holds MONDEO SPRING PLUS and PILLOW TOP ROYAL
+FIRM; Luxury Sleep holds the WELLBEING ranges, PILLOW TOP ROYAL and TOPPER;
+Hotel Collection holds the GOLDY hospital mattress. The two bundle collections
+remain empty because no bundle products were supplied.
+
+**Still not supplied, therefore not invented:** stock levels (all `TBD`), real
+product photographs, firmness for most lines, adult/guest-room audiences,
+new-arrival or best-seller claims, and the cut-off dimensions of PILLOW TOP
+ROYAL FIRM (`75X54X...` etc. are preserved exactly). The local SVGs in
+`public/images/beds/` are explicitly labelled *illustrative only — not a
+product photo*; regenerate them with `node scripts/generate-bed-illustrations.mjs`.
 
 **Live payments are not enabled.** The flow is complete and tested against a
 mocked Paystack client, but it needs the owner's Paystack keys, a confirmed
@@ -158,12 +174,16 @@ shopper. Customer records, orders and payments live in the server-side database
 ## Tests
 
 ```bash
-# Storefront (100 tests across 15 suites)
-npm test -- --watchAll=false -- --runInBand
+# Storefront (106 tests across 15 suites)
+npx react-scripts test --watchAll=false --runInBand
 
-# Backend (109 tests across 26 suites; database tests need PostgreSQL)
+# Backend (109 tests across 31 suites; DB-backed tests skip without PostgreSQL)
 cd server && npm test
 ```
+
+Latest verification: storefront **106/106 passed**; backend **75 passed, 34
+skipped, 0 failed** (the skipped tests require PostgreSQL); production build
+compiled successfully with all 14 illustrative SVGs copied to `build/images/beds/`.
 
 The storefront tests cover the catalogue, recommendations, cart, checkout
 validation, the API client, the server-verified payment callback, secure order

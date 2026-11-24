@@ -4,10 +4,10 @@ Express REST API with PostgreSQL (via Prisma) that owns the product catalogue,
 server-side pricing, order records, customer records, authentication, Paystack
 payments and PDF receipts.
 
-The React storefront reads its placeholder catalogue from `src/data/products.js`
-while real product data is awaited, but checkout, payment verification, receipts,
-customer accounts, order tracking and the protected admin dashboard now call
-this API.
+The React storefront and this API share the owner-supplied catalogue in
+`src/data/ownerCatalogue.mjs` (124 priced rows, 14 bed lines), so prices cannot
+drift between them. Checkout, payment verification, receipts, customer accounts,
+order tracking and the protected admin dashboard call this API.
 
 ## Quick start
 
@@ -18,7 +18,7 @@ npm install
 npm run db:up                 # local PostgreSQL 16 in Docker
 npm run prisma:generate
 npm run migrate               # create the database schema
-npm run seed                  # 7 collections + 8 placeholder products
+npm run seed                  # 7 collections + 124 owner-priced products + 14 illustrative images
 npm run dev                   # http://localhost:5000
 ```
 
@@ -28,7 +28,7 @@ Run the tests with:
 npm test
 ```
 
-The suite has 109 tests across 26 suites: pricing, recommendations, references,
+The suite has 109 tests across 31 suites: pricing, recommendations, references,
 validation, webhook signatures, payment helpers, order status transitions,
 verified-revenue and CSV safety, and API integration tests including customer
 access, secure tracking, protected admin reporting/catalogue/settings and a
@@ -137,9 +137,13 @@ Prisma's default query engine requires a **64-bit Node.js** installation.
   `requiresDeliveryQuote: true` until an administrator calls
   `PATCH /api/orders/:reference/delivery`. Payment is refused before then so an
   incomplete total is never charged.
-- **The catalogue is placeholder data.** Products have no price, sizes,
-  firmness, audiences, images or stock, so recommendations honestly return no
-  matches and orders for those products are rejected until real data is added.
+- **Catalogue data is real but incomplete.** Prices, labels and sizes come from
+  the owner's price list. Stock stays `TBD`, most firmness/audience values are
+  unknown, and the images are labelled illustrations rather than photos.
+  Recommendations only match where the owner actually supplied the needed data;
+  most adult/medium queries therefore return no matches rather than a guess.
+  Cut-off FIRM dimensions are preserved with `...` and MONDEO SPRING FIRM was
+  omitted entirely because its prices were not visible.
 - **Admin data is as good as the records entered.** The dashboard reports real
   database rows only; an empty report means no matching record, never invented
   sales. Owner-supplied contact details stay blank until saved in Settings.

@@ -63,13 +63,13 @@ describe('App storefront routing', () => {
   it('renders a saved cart with its quantities', () => {
     window.localStorage.setItem(
       CART_STORAGE_KEY,
-      JSON.stringify([{ productId: 'budget-sleep-sample-1', size: '', quantity: 2 }])
+      JSON.stringify([{ productId: 'comfy-1', size: '75X30X4', quantity: 2 }])
     );
 
     renderAt('/cart');
 
     expect(
-      screen.getByRole('heading', { name: /budget sleep mattress \(sample\)/i, level: 2 })
+      screen.getByRole('heading', { name: /COMFY \(75X30X4\)/i, level: 2 })
     ).toBeInTheDocument();
     expect(screen.getByText(/2 items in your cart/i)).toBeInTheDocument();
   });
@@ -77,7 +77,7 @@ describe('App storefront routing', () => {
   it('validates the checkout form before showing a review', () => {
     window.localStorage.setItem(
       CART_STORAGE_KEY,
-      JSON.stringify([{ productId: 'budget-sleep-sample-1', size: '', quantity: 1 }])
+      JSON.stringify([{ productId: 'comfy-1', size: '75X30X4', quantity: 1 }])
     );
 
     renderAt('/checkout');

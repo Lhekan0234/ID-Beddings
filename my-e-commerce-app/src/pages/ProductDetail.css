@@ -12,6 +12,12 @@
   align-items: start;
 }
 
+.product-detail__image-note {
+  margin: var(--space-2) 0 0;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+}
+
 .product-detail__collection {
   text-transform: uppercase;
   letter-spacing: 0.05em;

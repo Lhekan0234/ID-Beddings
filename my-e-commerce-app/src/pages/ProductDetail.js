@@ -69,6 +69,11 @@ export default function ProductDetail() {
       <div className="product-detail">
         <div className="product-detail__media">
           <ProductImage product={product} />
+          {product.isImageIllustrative ? (
+            <p className="product-detail__image-note">
+              Illustrative image only — not a product photograph. Real photos will be added when supplied.
+            </p>
+          ) : null}
         </div>
 
         <div className="product-detail__info">
@@ -76,6 +81,7 @@ export default function ProductDetail() {
           <h1 className="product-detail__title">{product.name}</h1>
 
           <div className="product-detail__badges">
+            {product.specs?.tier && <Badge tone="info">{product.specs.tier}</Badge>}
             {product.isPlaceholder && <Badge tone="warning">Sample listing</Badge>}
             {product.stockStatus === 'In stock' && <Badge tone="success">In stock</Badge>}
             {product.stockStatus === 'TBD' && <Badge tone="neutral">Stock status: to be confirmed</Badge>}

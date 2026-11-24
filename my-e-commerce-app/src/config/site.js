@@ -40,9 +40,10 @@ export const site = {
     note: 'Delivery charges are confirmed by our team before payment.',
   },
 
-  // True while the catalogue contains placeholder data rather than real,
-  // business-supplied products (prd/agent.md section 5).
-  catalogueIsPlaceholder: true,
+  // The owner supplied real product names and prices on 2026-11-24. Product
+  // photographs and stock levels are still outstanding, but the prices shown
+  // are genuine, so the demo-catalogue notice is no longer displayed.
+  catalogueIsPlaceholder: false,
 };
 
 export default site;

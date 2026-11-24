@@ -50,6 +50,7 @@ function ResultCard({ product }) {
         </dl>
 
         <div className="recommendation-result__badges">
+          {product.specs?.tier && <Badge tone="info">{product.specs.tier}</Badge>}
           {product.isPlaceholder && <Badge tone="warning">Sample listing</Badge>}
           {product.stockStatus === 'In stock' && <Badge tone="success">In stock</Badge>}
         </div>

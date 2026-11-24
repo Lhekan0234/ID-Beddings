@@ -38,7 +38,7 @@ export default function Catalog() {
       <ProductList
         products={results}
         emptyTitle="No products match your filters"
-        emptyMessage="Try adjusting your search or filters. Real catalogue data will be added by the business owner."
+        emptyMessage="Try adjusting your search or filters across the owner-supplied catalogue."
       />
     </div>
   );

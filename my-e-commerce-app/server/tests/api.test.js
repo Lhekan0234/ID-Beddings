@@ -101,34 +101,35 @@ describe('API against the seeded database', () => {
 
     const budget = response.body.collections.find((c) => c.slug === 'budget-sleep');
     assert.equal(budget.name, 'Budget Sleep');
-    assert.equal(budget.productCount, 2);
+    assert.equal(budget.productCount, 25);
   });
 
-  it('returns the placeholder catalogue without inventing prices', async (t) => {
+  it('returns the owner-supplied catalogue with real prices', async (t) => {
     if (skipWithoutDatabase(t)) return;
 
     const response = await request(app).get('/api/products');
     assert.equal(response.status, 200);
-    assert.equal(response.body.products.length, 8);
+    assert.equal(response.body.products.length, 124);
 
     for (const product of response.body.products) {
-      assert.equal(product.price, null);
+      assert.ok(Number.isInteger(product.price) && product.price > 0);
       assert.equal(product.stockStatus, 'TBD');
-      assert.equal(product.isPlaceholder, true);
-      assert.deepEqual(product.sizes, []);
-      assert.deepEqual(product.firmness, []);
-      assert.deepEqual(product.audiences, []);
+      assert.equal(product.isPlaceholder, false);
+      assert.equal(product.sizes.length, 1);
+      assert.ok(Array.isArray(product.firmness));
+      assert.ok(Array.isArray(product.audiences));
+      assert.equal(product.images.length, 1);
     }
   });
 
   it('finds a product by id and by slug', async (t) => {
     if (skipWithoutDatabase(t)) return;
 
-    const byId = await request(app).get('/api/products/budget-sleep-sample-1');
+    const byId = await request(app).get('/api/products/comfy-1');
     assert.equal(byId.status, 200);
     assert.equal(byId.body.product.collection, 'budget-sleep');
 
-    const bySlug = await request(app).get('/api/products/budget-sleep-sample-1');
+    const bySlug = await request(app).get('/api/products/comfy-1');
     assert.equal(bySlug.body.product.id, byId.body.product.id);
   });
 
@@ -145,13 +146,13 @@ describe('API against the seeded database', () => {
     assert.deepEqual(response.body.products, []);
   });
 
-  it('refuses to order a placeholder product without a confirmed price', async (t) => {
+  it('refuses an order when a sized product has no size selected', async (t) => {
     if (skipWithoutDatabase(t)) return;
 
     const response = await request(app)
       .post('/api/orders')
       .send({
-        items: [{ productId: 'budget-sleep-sample-1', size: '', quantity: 1 }],
+        items: [{ productId: 'comfy-1', size: '', quantity: 1 }],
         customer: {
           fullName: 'Ada Obi',
           email: 'ada.obi@example.com',
@@ -163,7 +164,7 @@ describe('API against the seeded database', () => {
       });
 
     assert.equal(response.status, 400);
-    assert.match(response.body.error, /confirmed price/i);
+    assert.match(response.body.error, /choose a size/i);
   });
 
   it('does not reveal whether an order exists for a wrong reference/email pair', async (t) => {

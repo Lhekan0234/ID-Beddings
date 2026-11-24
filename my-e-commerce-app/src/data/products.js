@@ -1,189 +1,47 @@
 // =============================================================================
-// PLACEHOLDER PRODUCT CATALOGUE — ID Beddings and More
+// STOREFRONT CATALOGUE — ID Beddings and More
 // =============================================================================
-// prd/agent.md section 5: "Use real business-supplied product data. Mark
-// missing data for the owner to provide." and section 2.7: "Do not invent
-// products, prices, customer records or sales figures."
+// Prices and product labels come from the owner's price list of 2026-11-24.
+// The raw transcription lives in `ownerCatalogue.js` and is shared with the
+// backend seed so the API and storefront cannot drift apart.
 //
-// Every entry below is a clearly-labelled PLACEHOLDER that exists only to
-// exercise the storefront UI. The owner has NOT yet supplied real catalogue
-// data, so we deliberately DO NOT invent:
-//   - prices            -> null  (UI shows "Price TBD")
-//   - specifications    -> {}    (empty)
-//   - dimensions        -> (not present)
-//   - available sizes   -> []    (empty)
-//   - firmness          -> []    (empty)
-//   - images            -> []    (empty -> local placeholder graphic, no hotlink)
-//   - stock levels      -> 'TBD' (unknown, not a fabricated count)
-//   - product claims    -> none  (no "best seller"/medical/quality claims)
-//   - audiences         -> []    (who the mattress suits; drives the
-//                                 recommendation form in prd/agent.md section 7)
-//
-// Real products should include an `audiences` array using the values
-// 'adult', 'child', 'couple' and/or 'guest-room'.
-//
-// TODO(owner): Replace this file's contents with the real catalogue (the seven
-// collections and their products, prices, sizes, firmness, specs and images).
+// What is still NOT supplied (and therefore not invented):
+//   - stock levels -> 'TBD'
+//   - firmness     -> only set where the owner's own wording supports it
+//   - audiences    -> only set for the baby/kiddies ranges
+//   - real photos  -> local SVGs clearly labelled "illustrative only"
+//   - new-arrival / best-seller claims -> none
 // =============================================================================
 
-// The seven collections required by prd/agent.md section 5.
+import { ownerLines, priceTiers, buildOwnerProducts } from './ownerCatalogue.mjs';
+import { slugify } from '../utils/format';
+
+// The seven collections required by prd/agent.md section 5. All are retained;
+// New Home Bundle and Couples Bundle are intentionally empty because the owner
+// did not supply any bundle products.
 export const collections = [
   { slug: 'budget-sleep', name: 'Budget Sleep', description: 'Affordable mattresses for everyday comfort.' },
   { slug: 'better-sleep', name: 'Better Sleep', description: 'A step up in support and durability.' },
   { slug: 'orthopedic-collection', name: 'Orthopedic Collection', description: 'Firmer options focused on support.' },
   { slug: 'luxury-sleep', name: 'Luxury Sleep', description: 'Premium materials and finish.' },
-  { slug: 'hotel-collection', name: 'Hotel Collection', description: 'Hospitality-grade comfort.' },
+  { slug: 'hotel-collection', name: 'Hotel Collection', description: 'Hospitality and institutional mattresses.' },
   { slug: 'new-home-bundle', name: 'New Home Bundle', description: 'Bundles for setting up a new home.' },
   { slug: 'couples-bundle', name: 'Couples Bundle', description: 'Bundles sized for two.' },
 ];
 
-// Distinct firmness / size values only drive the filter UI; they contain no
-// invented per-product data. Sizes are left empty until the owner supplies them.
+export { priceTiers };
+
+// Firmness values are the fixed options from prd/agent.md section 7. Only the
+// lines whose names explicitly say "Firm" carry a firmness value in the data.
 export const firmnessOptions = ['Soft', 'Medium', 'Firm', 'Orthopedic'];
-export const sizeOptions = [];
 
+// Sizes are derived only from the owner's price list; no size is guessed.
+export const sizeOptions = [...new Set(ownerLines.flatMap((line) => line.rows.map((row) => row[1])))]
+  .filter((size) => !size.includes('...'))
+  .sort((a, b) => a.localeCompare(b, 'en', { numeric: true }));
 
-// Placeholder products. One demo entry per collection so every collection page
-// renders, plus an extra in Budget Sleep to demonstrate multiple results.
-// NOTE: isBestSeller is false for all — we make no sales/popularity claims.
-export const products = [
-  {
-    id: 'budget-sleep-sample-1',
-    name: 'Budget Sleep Mattress (sample)',
-    collection: 'budget-sleep',
-    description: 'Placeholder listing for the Budget Sleep collection. Real description, price and specifications to be provided by the business owner.',
-    price: null,
-    images: [],
-    sizes: [],
-    firmness: [],
-    audiences: [],
-    stockStatus: 'TBD',
-    specs: {},
-    isPlaceholder: true,
-    isBestSeller: false,
-    isNewArrival: true,
-    dateAdded: '2026-01-05',
-  },
-  {
-    id: 'budget-sleep-sample-2',
-    name: 'Budget Sleep Pillowtop (sample)',
-    collection: 'budget-sleep',
-    description: 'Placeholder listing for the Budget Sleep collection. Real details to be provided by the business owner.',
-    price: null,
-    images: [],
-    sizes: [],
-    firmness: [],
-    audiences: [],
-    stockStatus: 'TBD',
-    specs: {},
-    isPlaceholder: true,
-    isBestSeller: false,
-    isNewArrival: false,
-    dateAdded: '2025-12-01',
-  },
-  {
-    id: 'better-sleep-sample-1',
-    name: 'Better Sleep Mattress (sample)',
-    collection: 'better-sleep',
-    description: 'Placeholder listing for the Better Sleep collection. Real details to be provided by the business owner.',
-    price: null,
-    images: [],
-    sizes: [],
-    firmness: [],
-    audiences: [],
-    stockStatus: 'TBD',
-    specs: {},
-    isPlaceholder: true,
-    isBestSeller: false,
-    isNewArrival: true,
-    dateAdded: '2026-01-08',
-  },
-  {
-    id: 'orthopedic-collection-sample-1',
-    name: 'Orthopedic Mattress (sample)',
-    collection: 'orthopedic-collection',
-    description: 'Placeholder listing for the Orthopedic Collection. Real details to be provided by the business owner.',
-    price: null,
-    images: [],
-    sizes: [],
-    firmness: [],
-    audiences: [],
-    stockStatus: 'TBD',
-    specs: {},
-    isPlaceholder: true,
-    isBestSeller: false,
-    isNewArrival: false,
-    dateAdded: '2025-11-20',
-  },
-  {
-    id: 'luxury-sleep-sample-1',
-    name: 'Luxury Sleep Mattress (sample)',
-    collection: 'luxury-sleep',
-    description: 'Placeholder listing for the Luxury Sleep collection. Real details to be provided by the business owner.',
-    price: null,
-    images: [],
-    sizes: [],
-    firmness: [],
-    audiences: [],
-    stockStatus: 'TBD',
-    specs: {},
-    isPlaceholder: true,
-    isBestSeller: false,
-    isNewArrival: true,
-    dateAdded: '2026-01-10',
-  },
-  {
-    id: 'hotel-collection-sample-1',
-    name: 'Hotel Collection Mattress (sample)',
-    collection: 'hotel-collection',
-    description: 'Placeholder listing for the Hotel Collection. Real details to be provided by the business owner.',
-    price: null,
-    images: [],
-    sizes: [],
-    firmness: [],
-    audiences: [],
-    stockStatus: 'TBD',
-    specs: {},
-    isPlaceholder: true,
-    isBestSeller: false,
-    isNewArrival: false,
-    dateAdded: '2025-10-15',
-  },
-  {
-    id: 'new-home-bundle-sample-1',
-    name: 'New Home Bundle (sample)',
-    collection: 'new-home-bundle',
-    description: 'Placeholder listing for the New Home Bundle. Real bundle contents and pricing to be provided by the business owner.',
-    price: null,
-    images: [],
-    sizes: [],
-    firmness: [],
-    audiences: [],
-    stockStatus: 'TBD',
-    specs: {},
-    isPlaceholder: true,
-    isBestSeller: false,
-    isNewArrival: true,
-    dateAdded: '2026-01-12',
-  },
-  {
-    id: 'couples-bundle-sample-1',
-    name: 'Couples Bundle (sample)',
-    collection: 'couples-bundle',
-    description: 'Placeholder listing for the Couples Bundle. Real bundle contents and pricing to be provided by the business owner.',
-    price: null,
-    images: [],
-    sizes: [],
-    firmness: [],
-    audiences: [],
-    stockStatus: 'TBD',
-    specs: {},
-    isPlaceholder: true,
-    isBestSeller: false,
-    isNewArrival: false,
-    dateAdded: '2025-09-30',
-  },
-];
+export const products = buildOwnerProducts(slugify);
+
 // ---- Lookup helpers --------------------------------------------------------
 
 export function getCollectionBySlug(slug) {
@@ -198,14 +56,24 @@ export function getProductsByCollection(slug) {
   return products.filter((p) => p.collection === slug);
 }
 
-// New arrivals = most recently added placeholder listings (by dateAdded).
-// Best sellers are intentionally empty until the owner supplies real data,
-// because we must not invent sales/popularity claims (prd/agent.md 2.7).
-export function getNewArrivals(limit = 4) {
-  return [...products]
-    .filter((p) => p.isNewArrival)
-    .sort((a, b) => Date.parse(b.dateAdded) - Date.parse(a.dateAdded))
-    .slice(0, limit);
+/** The owner's own LUXURY / COMFORT / VALUE grouping. */
+export function getProductsByTier(tier) {
+  return products.filter((p) => p.specs?.tier === tier);
+}
+
+export function getProductLines() {
+  return ownerLines.map((line) => ({
+    line: line.line,
+    tier: line.tier,
+    collection: line.collection,
+    variants: line.rows.length,
+  }));
+}
+
+// No owner-supplied "new arrival" or popularity data exists, so both helpers
+// stay honest rather than inventing recency or sales claims.
+export function getNewArrivals() {
+  return [];
 }
 
 export function getBestSellers() {

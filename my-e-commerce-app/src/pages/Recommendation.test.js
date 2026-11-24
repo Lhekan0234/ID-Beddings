@@ -5,8 +5,8 @@ describe('Recommendation page', () => {
   it('shows an informative empty state when the catalogue cannot match', () => {
     render(<Recommendation />);
 
-    // The placeholder catalogue has no audiences/firmness/prices, so a
-    // complete submission must honestly return no matches.
+    // The owner did not supply adult/medium data, so a complete submission
+    // must honestly return no matches rather than guess a product.
     fireEvent.click(screen.getByLabelText('Adult'));
     fireEvent.click(screen.getByLabelText('Medium'));
     fireEvent.click(screen.getByLabelText('₦100–200k'));

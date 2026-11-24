@@ -27,6 +27,7 @@ export default function ProductCard({ product }) {
         <p className="product-card__price">{formatPrice(product.price)}</p>
 
         <div className="product-card__badges">
+          {product.specs?.tier && <Badge tone="info">{product.specs.tier}</Badge>}
           {product.isPlaceholder && <Badge tone="warning">Sample listing</Badge>}
           {product.stockStatus === 'In stock' && <Badge tone="success">In stock</Badge>}
         </div>

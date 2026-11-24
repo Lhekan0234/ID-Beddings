@@ -18,12 +18,17 @@ export default function ProductImage({ product, alt, className = '' }) {
 
   if (firstImage) {
     return (
-      <img
-        src={firstImage}
-        alt={label}
-        className={`product-image ${className}`}
-        loading="lazy"
-      />
+      <span className={`product-image-wrap ${className}`}>
+        <img
+          src={firstImage}
+          alt={label}
+          className="product-image"
+          loading="lazy"
+        />
+        {product?.isImageIllustrative ? (
+          <span className="product-image__note">Illustrative only</span>
+        ) : null}
+      </span>
     );
   }
 
